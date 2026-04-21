@@ -25,6 +25,7 @@ export interface Profile {
   email: string;
   level: string;
   points: number;
+  is_admin: boolean;
   created_at: string;
 }
 

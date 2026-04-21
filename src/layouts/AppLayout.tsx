@@ -1,12 +1,12 @@
 import React from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { LogOut, LayoutDashboard, BookOpen, GraduationCap, BarChart3, Menu, X, Sparkles } from 'lucide-react';
+import { LogOut, LayoutDashboard, BookOpen, GraduationCap, BarChart3, Menu, X, Sparkles, ShieldCheck } from 'lucide-react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const AppLayout: React.FC = () => {
-  const { user, signOut } = useAuth();
+  const { user, isAdmin, signOut } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
   const location = useLocation();
 
@@ -16,6 +16,10 @@ export const AppLayout: React.FC = () => {
     { label: 'Exámenes', icon: GraduationCap, path: '/examenes', color: 'violet' },
     { label: 'Progreso', icon: BarChart3, path: '/progreso', color: 'orange' },
   ];
+
+  if (isAdmin) {
+    navItems.push({ label: 'Admin', icon: ShieldCheck, path: '/admin', color: 'indigo' });
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
@@ -89,7 +93,9 @@ export const AppLayout: React.FC = () => {
                   <p className="text-sm font-black text-slate-800 truncate mb-0.5">{user?.email?.split('@')[0]}</p>
                   <div className="flex items-center gap-1">
                     <Sparkles className="w-3 h-3 text-yellow-500 fill-yellow-500" />
-                    <span className="text-[10px] font-black text-blue-600 uppercase tracking-tighter">Estudiante Pro</span>
+                    <span className="text-[10px] font-black text-blue-600 uppercase tracking-tighter">
+                      {isAdmin ? 'Administrador' : 'Estudiante Pro'}
+                    </span>
                   </div>
                 </div>
               </div>

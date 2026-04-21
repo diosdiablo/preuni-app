@@ -120,10 +120,10 @@ export const DashboardPage: React.FC = () => {
               Racha de 5 días activos
             </div>
             <h1 className="text-5xl md:text-6xl font-black tracking-tight leading-tight">
-              ¡Hola, {profile?.email.split('@')[0]}! 🚀
+              ¡Hola, {profile?.email?.split('@')[0] || 'Estudiante'}! 🚀
             </h1>
             <p className="text-xl md:text-2xl opacity-90 font-medium max-w-lg">
-              Tu nivel actual es <span className="p-1 px-3 bg-white text-blue-700 rounded-xl font-black">{profile?.level}</span>
+              Tu nivel actual es <span className="p-1 px-3 bg-white text-blue-700 rounded-xl font-black">{profile?.level || 'Principiante'}</span>
             </p>
             <div className="flex flex-wrap gap-5 pt-4">
               <Link to="/examenes" className="px-8 py-4 bg-white text-blue-700 rounded-[1.5rem] font-black shadow-xl hover:scale-105 transition-all flex items-center gap-3">

@@ -14,6 +14,7 @@ CREATE TABLE public.profiles (
   email TEXT NOT NULL,
   level TEXT DEFAULT 'Principiante',
   points INTEGER DEFAULT 0,
+  is_admin BOOLEAN DEFAULT false,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
@@ -74,9 +75,23 @@ CREATE POLICY "Users can view own profile"
 CREATE POLICY "Users can update own profile" 
   ON public.profiles FOR UPDATE USING (auth.uid() = id);
 
--- Reglas para Exercises (Cualquiera autenticado puede leer, nadie puede modificar a menos que sea admin - pero por simplicidad, read-only para public)
 CREATE POLICY "Anyone can view exercises" 
-  ON public.exercises FOR SELECT USING (true); -- Permitimos lectura pública
+  ON public.exercises FOR SELECT USING (true);
+
+CREATE POLICY "Admins can insert exercises" 
+  ON public.exercises FOR INSERT WITH CHECK (
+    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin = true)
+  );
+
+CREATE POLICY "Admins can update exercises" 
+  ON public.exercises FOR UPDATE USING (
+    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin = true)
+  );
+
+CREATE POLICY "Admins can delete exercises" 
+  ON public.exercises FOR DELETE USING (
+    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_admin = true)
+  );
 
 -- Reglas para Practice Stats
 CREATE POLICY "Users can insert own practice stats" 
@@ -107,12 +122,11 @@ CREATE POLICY "Users can view own exam answers"
 -- 4. TRIGGERS PARA AUTENTICACIÓN
 -- ==========================================
 
--- Crear un registro en Profiles cuando un usuario se registra en auth.users
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.profiles (id, email, level, points)
-  VALUES (new.id, new.email, 'Principiante', 0);
+  INSERT INTO public.profiles (id, email, level, points, is_admin)
+  VALUES (new.id, new.email, 'Principiante', 0, false);
   RETURN new;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

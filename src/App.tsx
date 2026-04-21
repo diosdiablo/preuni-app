@@ -6,6 +6,7 @@ import { AuthPage } from '@/pages/AuthPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { ExercisesPage } from '@/pages/ExercisesPage';
 import { ExamsPage } from '@/pages/ExamsPage';
+import { AdminPage } from '@/pages/AdminPage';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
@@ -36,7 +37,8 @@ function App() {
             <Route index element={<DashboardPage />} />
             <Route path="ejercicios" element={<ExercisesPage />} />
             <Route path="examenes" element={<ExamsPage />} />
-            <Route path="progreso" element={<DashboardPage />} /> {/* Merged into dashboard */}
+            <Route path="progreso" element={<DashboardPage />} />
+            <Route path="admin" element={<AdminPage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" />} />
