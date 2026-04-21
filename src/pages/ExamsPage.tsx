@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
-import type { Exercise, Area } from '@/types';
+import type { Exercise, Area, Dificultad } from '@/types';
 import { 
   Play, 
   Timer, 
