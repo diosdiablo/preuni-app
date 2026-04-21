@@ -1,7 +1,9 @@
 export type Area = 
   | 'Matemáticas' 
   | 'Comunicación' 
-  | 'Ciencias Naturales' 
+  | 'Biología'
+  | 'Física'
+  | 'Química'
   | 'Ciencias Sociales' 
   | 'Inglés' 
   | 'Razonamiento Matemático' 

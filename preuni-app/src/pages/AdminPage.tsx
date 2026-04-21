@@ -10,7 +10,11 @@ import {
   Save, 
   AlertCircle,
   Database,
-  LayoutGrid
+  LayoutGrid,
+  UploadCloud,
+  FileCode,
+  Copy,
+  CheckCircle2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -18,8 +22,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 export const AdminPage: React.FC = () => {
   const { isAdmin } = useAuth();
   const [exercises, setExercises] = useState<Exercise[]>([]);
-  const [activeTab, setActiveTab] = useState<'list' | 'create'>('list');
+  const [activeTab, setActiveTab] = useState<'list' | 'create' | 'bulk'>('list');
   const [search, setSearch] = useState('');
+  const [copySuccess, setCopySuccess] = useState(false);
   
   // Form state
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -32,6 +37,9 @@ export const AdminPage: React.FC = () => {
     respuesta_correcta: 0,
     explicacion: ''
   });
+
+  // Bulk state
+  const [bulkText, setBulkText] = useState('');
 
   useEffect(() => {
     if (isAdmin) {
@@ -84,6 +92,40 @@ export const AdminPage: React.FC = () => {
     }
   };
 
+  const handleBulkImport = async () => {
+    try {
+      const data = JSON.parse(bulkText);
+      if (!Array.isArray(data)) throw new Error('El formato debe ser un arreglo de objetos [{}, {}]');
+      
+      const { error } = await supabase.from('exercises').insert(data);
+      if (error) throw error;
+      
+      alert(`¡Éxito! Se han importado ${data.length} ejercicios.`);
+      setBulkText('');
+      setActiveTab('list');
+      fetchExercises();
+    } catch (err: any) {
+      alert('Error de formato: ' + err.message);
+    }
+  };
+
+  const copyTemplate = () => {
+    const template = `[
+  {
+    "area": "Matemáticas",
+    "subarea": "Álgebra",
+    "dificultad": "Medio",
+    "enunciado": "Si x + 2 = 5, ¿cuánto vale x?",
+    "opciones": ["1", "2", "3", "4"],
+    "respuesta_correcta": 2,
+    "explicacion": "Restamos 2 de ambos lados: 5 - 2 = 3."
+  }
+]`;
+    navigator.clipboard.writeText(template);
+    setCopySuccess(true);
+    setTimeout(() => setCopySuccess(false), 2000);
+  };
+
   const handleDelete = async (id: string) => {
     if (!confirm('¿Seguro que deseas eliminar este ejercicio?')) return;
     const { error } = await supabase.from('exercises').delete().eq('id', id);
@@ -129,7 +171,7 @@ export const AdminPage: React.FC = () => {
       </div>
 
       {/* Tabs Menu */}
-      <div className="flex gap-4 p-2 bg-slate-100 rounded-[2rem] w-fit">
+      <div className="flex flex-wrap gap-4 p-2 bg-slate-100 rounded-[2rem] w-fit">
         <button
           onClick={() => setActiveTab('list')}
           className={cn(
@@ -138,7 +180,7 @@ export const AdminPage: React.FC = () => {
           )}
         >
           <LayoutGrid className="w-5 h-5" />
-          Lista de Preguntas
+          Lista
         </button>
         <button
           onClick={() => {
@@ -160,12 +202,22 @@ export const AdminPage: React.FC = () => {
           )}
         >
           <Plus className="w-5 h-5" />
-          {editingId ? 'Editar Pregunta' : 'Añadir Nueva'}
+          {editingId ? 'Editar' : 'Añadir'}
+        </button>
+        <button
+          onClick={() => setActiveTab('bulk')}
+          className={cn(
+            "flex items-center gap-3 px-8 py-4 rounded-[1.5rem] font-black transition-all",
+            activeTab === 'bulk' ? "bg-white text-indigo-600 shadow-xl" : "text-slate-500 hover:text-slate-800"
+          )}
+        >
+          <UploadCloud className="w-5 h-5" />
+          Carga Masiva
         </button>
       </div>
 
       <AnimatePresence mode="wait">
-        {activeTab === 'list' ? (
+        {activeTab === 'list' && (
           <motion.div 
             key="list"
             initial={{ opacity: 0, y: 20 }}
@@ -173,7 +225,6 @@ export const AdminPage: React.FC = () => {
             exit={{ opacity: 0, y: -20 }}
             className="space-y-8"
           >
-            {/* Search Bar */}
             <div className="relative group max-w-2xl">
               <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
               <input
@@ -218,7 +269,9 @@ export const AdminPage: React.FC = () => {
               ))}
             </div>
           </motion.div>
-        ) : (
+        )}
+
+        {activeTab === 'create' && (
           <motion.div 
             key="create"
             initial={{ opacity: 0, y: 20 }}
@@ -235,17 +288,17 @@ export const AdminPage: React.FC = () => {
                     onChange={(e) => setFormData({...formData, area: e.target.value as Area})}
                     className="w-full px-6 py-4 rounded-2xl border-2 border-slate-50 bg-slate-50 outline-none focus:bg-white focus:border-indigo-500 transition-all font-bold"
                   >
-                    {['Matemáticas', 'Comunicación', 'Ciencias Naturales', 'Ciencias Sociales', 'Inglés', 'Razonamiento Matemático', 'Razonamiento Verbal'].map(a => (
+                    {['Matemáticas', 'Comunicación', 'Biología', 'Física', 'Química', 'Ciencias Sociales', 'Inglés', 'Razonamiento Matemático', 'Razonamiento Verbal'].map(a => (
                       <option key={a} value={a}>{a}</option>
                     ))}
                   </select>
                 </div>
                 <div className="space-y-3">
-                  <label className="text-sm font-black text-slate-400 uppercase tracking-widest pl-2">Subárea (Específico)</label>
+                  <label className="text-sm font-black text-slate-400 uppercase tracking-widest pl-2">Subárea</label>
                   <input 
                     type="text" 
                     required
-                    placeholder="Ej: Álgebra, Sintaxis, Célula..."
+                    placeholder="Ej: Álgebra, Sintaxis..."
                     value={formData.subarea}
                     onChange={(e) => setFormData({...formData, subarea: e.target.value})}
                     className="w-full px-6 py-4 rounded-2xl border-2 border-slate-50 bg-slate-50 outline-none focus:bg-white focus:border-indigo-500 transition-all font-bold"
@@ -274,7 +327,7 @@ export const AdminPage: React.FC = () => {
               </div>
 
               <div className="space-y-3">
-                <label className="text-sm font-black text-slate-400 uppercase tracking-widest pl-2">Enunciado de la Pregunta</label>
+                <label className="text-sm font-black text-slate-400 uppercase tracking-widest pl-2">Enunciado</label>
                 <textarea 
                   required
                   rows={4}
@@ -286,7 +339,7 @@ export const AdminPage: React.FC = () => {
               </div>
 
               <div className="space-y-6">
-                <label className="text-sm font-black text-slate-400 uppercase tracking-widest pl-2">Opciones de Respuesta</label>
+                <label className="text-sm font-black text-slate-400 uppercase tracking-widest pl-2">Opciones</label>
                 <div className="grid grid-cols-1 gap-4">
                   {formData.opciones?.map((opt, idx) => (
                     <div key={idx} className="flex gap-4 items-center">
@@ -320,11 +373,11 @@ export const AdminPage: React.FC = () => {
               </div>
 
               <div className="space-y-3">
-                <label className="text-sm font-black text-slate-400 uppercase tracking-widest pl-2">Justificación / Explicación</label>
+                <label className="text-sm font-black text-slate-400 uppercase tracking-widest pl-2">Explicación</label>
                 <textarea 
                   required
                   rows={3}
-                  placeholder="Explica por qué esa es la respuesta correcta..."
+                  placeholder="Justifica la respuesta..."
                   value={formData.explicacion}
                   onChange={(e) => setFormData({...formData, explicacion: e.target.value})}
                   className="w-full px-8 py-6 rounded-[2rem] border-2 border-slate-50 bg-slate-50 outline-none focus:bg-white focus:border-indigo-500 transition-all font-medium text-slate-600"
@@ -339,20 +392,79 @@ export const AdminPage: React.FC = () => {
                   <Save className="w-6 h-6" />
                   {editingId ? 'Guardar Cambios' : 'Crear Pregunta'}
                 </button>
-                {editingId && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEditingId(null);
-                      setActiveTab('list');
-                    }}
-                    className="px-10 py-6 bg-slate-100 text-slate-500 font-black rounded-[2rem] hover:bg-slate-200 transition-all"
-                  >
-                    Cancelar
-                  </button>
-                )}
               </div>
             </form>
+          </motion.div>
+        )}
+
+        {activeTab === 'bulk' && (
+          <motion.div 
+            key="bulk"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="space-y-8"
+          >
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2 card-premium p-10 md:p-14 space-y-8">
+                <div className="space-y-3">
+                  <h3 className="text-3xl font-black text-slate-800">Carga por Lote</h3>
+                  <p className="text-slate-500 font-medium">Pega aquí tus preguntas en formato JSON para subirlas todas de un golpe.</p>
+                </div>
+                
+                <div className="space-y-4">
+                  <textarea 
+                    rows={15}
+                    value={bulkText}
+                    onChange={(e) => setBulkText(e.target.value)}
+                    placeholder='[ { "area": "Matemáticas", ... }, { ... } ]'
+                    className="w-full p-8 rounded-[2.5rem] bg-slate-900 text-emerald-400 font-mono text-sm outline-none border-4 border-slate-800 focus:border-indigo-500/50 transition-all shadow-inner"
+                  />
+                  <button
+                    onClick={handleBulkImport}
+                    disabled={!bulkText}
+                    className="w-full py-6 bg-emerald-500 text-white font-black rounded-[2rem] shadow-2xl shadow-emerald-200 hover:scale-[1.02] active:scale-95 transition-all text-xl flex items-center justify-center gap-3 disabled:opacity-50 disabled:scale-100"
+                  >
+                    <UploadCloud className="w-6 h-6" />
+                    Importar Ejercicios
+                  </button>
+                </div>
+              </div>
+
+              <div className="card-premium p-10 bg-indigo-600 text-white space-y-8 h-fit">
+                <div className="p-4 bg-white/20 rounded-2xl w-fit">
+                  <FileCode className="w-8 h-8" />
+                </div>
+                <div className="space-y-4">
+                  <h4 className="text-2xl font-black italic">Formato de Ejemplo</h4>
+                  <p className="text-indigo-100 text-sm leading-relaxed">
+                    Usa este formato para que el sistema reconozca tus preguntas. Puedes copiarlo y editarlo.
+                  </p>
+                </div>
+                
+                <div className="p-6 bg-black/20 rounded-2xl font-mono text-[10px] opacity-80 overflow-hidden">
+                  <pre>{`[
+  {
+    "area": "Matemáticas",
+    "subarea": "Álgebra",
+    "dificultad": "Medio",
+    "enunciado": "Si x + 2 = 5...",
+    "opciones": ["1", "2", "3", "4"],
+    "respuesta_correcta": 2,
+    "explicacion": "..."
+  }
+]`}</pre>
+                </div>
+
+                <button
+                  onClick={copyTemplate}
+                  className="w-full py-4 bg-white text-indigo-600 font-black rounded-xl flex items-center justify-center gap-2 hover:bg-indigo-50 transition-all"
+                >
+                  {copySuccess ? <CheckCircle2 className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+                  {copySuccess ? 'Copiado' : 'Copiar Plantilla'}
+                </button>
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

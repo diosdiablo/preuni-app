@@ -40,7 +40,7 @@ const BLOCKS: BlockConfig[] = [
     description: 'Medicina, Farmacia, Odontología',
     icon: Stethoscope,
     color: 'emerald',
-    distribution: { 'Ciencias Naturales': 40, 'Razonamiento Verbal': 20, 'Razonamiento Matemático': 15, 'Matemáticas': 10, 'Comunicación': 15 }
+    distribution: { 'Biología': 20, 'Química': 20, 'Física': 10, 'Razonamiento Verbal': 20, 'Razonamiento Matemático': 15, 'Comunicación': 15 }
   },
   {
     id: 'B',
@@ -48,7 +48,7 @@ const BLOCKS: BlockConfig[] = [
     description: 'Sistemas, Civil, Mecánica',
     icon: Cpu,
     color: 'blue',
-    distribution: { 'Matemáticas': 30, 'Ciencias Naturales': 20, 'Razonamiento Matemático': 25, 'Razonamiento Verbal': 15, 'Comunicación': 10 }
+    distribution: { 'Matemáticas': 30, 'Física': 20, 'Química': 15, 'Razonamiento Matemático': 20, 'Razonamiento Verbal': 15 }
   },
   {
     id: 'C',

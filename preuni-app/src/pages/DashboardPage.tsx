@@ -56,14 +56,16 @@ export const DashboardPage: React.FC = () => {
       const areaColors: Record<string, string> = {
         'Matemáticas': '#3b82f6',
         'Comunicación': '#ec4899',
-        'Ciencias Naturales': '#10b981',
-        'Ciencias Sociales': '#f59e0b',
-        'Inglés': '#8b5cf6',
-        'Razonamiento Matemático': '#06b6d4',
+        'Biología': '#10b981',
+        'Física': '#f59e0b',
+        'Química': '#06b6d4',
+        'Ciencias Sociales': '#8b5cf6',
+        'Inglés': '#6366f1',
+        'Razonamiento Matemático': '#14b8a6',
         'Razonamiento Verbal': '#ef4444'
       };
 
-      const areas: Area[] = ['Matemáticas', 'Comunicación', 'Ciencias Naturales', 'Ciencias Sociales', 'Inglés', 'Razonamiento Matemático', 'Razonamiento Verbal'];
+      const areas: Area[] = ['Matemáticas', 'Comunicación', 'Biología', 'Física', 'Química', 'Ciencias Sociales', 'Inglés', 'Razonamiento Matemático', 'Razonamiento Verbal'];
       const areaStats = areas.map(area => ({
         area: area.split(' ')[0],
         full: area,
