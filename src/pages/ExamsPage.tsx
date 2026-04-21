@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
-import type { Exercise, Exam, Area } from '@/types';
+import type { Exercise, Area } from '@/types';
 import { 
   Play, 
   Timer, 
@@ -11,13 +11,12 @@ import {
   ChevronLeft,
   Clock,
   Target,
-  Trophy,
   History,
-  Brain,
   Stethoscope,
   Cpu,
   Gavel,
-  BadgeDollarSign
+  BadgeDollarSign,
+  Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -154,7 +153,7 @@ export const ExamsPage: React.FC = () => {
 
     // Save to Supabase
     if (user) {
-      const { data: examData, error: examError } = await supabase
+      const { data: examData } = await supabase
         .from('exams')
         .insert([{
           user_id: user.id,
