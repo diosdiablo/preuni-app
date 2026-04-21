@@ -179,7 +179,7 @@ export const DashboardPage: React.FC = () => {
             <h3 className="text-2xl font-black text-slate-800">Mastery Path</h3>
           </div>
           <div className="flex-1 space-y-5">
-            {stats.sort((a,b) => b.value - a.value).map((s) => {
+            {[...stats].sort((a,b) => b.value - a.value).map((s) => {
               const level = getMasteryLevel(s.value);
               return (
                 <div key={s.area} className="group p-5 rounded-[2rem] bg-slate-50 border border-slate-100/50 hover:bg-white hover:border-blue-100 hover:shadow-xl transition-all">
