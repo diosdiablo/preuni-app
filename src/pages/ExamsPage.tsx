@@ -81,7 +81,8 @@ export const ExamsPage: React.FC = () => {
   const [settings, setSettings] = useState({
     count: 20,
     timeLimit: 30,
-    blockId: 'B' as BlockId
+    blockId: 'B' as BlockId,
+    difficulty: 'All' as Dificultad | 'All'
   });
 
   useEffect(() => {
@@ -107,10 +108,14 @@ export const ExamsPage: React.FC = () => {
         const { data } = await supabase
           .from('exercises')
           .select('*')
-          .eq('area', area)
-          .limit(countForArea);
+          .eq('area', area);
         
-        if (data) allQuestions = [...allQuestions, ...data];
+        let filtered = data || [];
+        if (settings.difficulty !== 'All') {
+          filtered = filtered.filter(ex => ex.dificultad === settings.difficulty);
+        }
+        
+        allQuestions = [...allQuestions, ...filtered.sort(() => Math.random() - 0.5).slice(0, countForArea)];
       }
 
       // Shuffle and trim to exact count
@@ -230,6 +235,28 @@ export const ExamsPage: React.FC = () => {
                   )}
                 >
                   {m}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="card-premium p-10 space-y-8">
+            <h3 className="text-2xl font-black text-slate-800 flex items-center gap-3">
+              <History className="text-indigo-500" />
+              Nivel de Dificultad
+            </h3>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {['All', 'Bajo', 'Medio', 'Alto'].map(d => (
+                <button
+                  key={d}
+                  onClick={() => setSettings({...settings, difficulty: d as any})}
+                  className={cn(
+                    "py-4 rounded-2xl font-black transition-all border-2",
+                    settings.difficulty === d 
+                      ? "bg-indigo-600 text-white border-indigo-600 shadow-xl shadow-indigo-200" 
+                      : "bg-white text-slate-500 border-slate-100 hover:border-indigo-200"
+                  )}
+                >
+                  {d === 'All' ? 'Todos' : d}
                 </button>
               ))}
             </div>
