@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
-import type { Profile, Exam, Area } from '@/types';
+import type { Exam, Area } from '@/types';
 import { 
   Target, 
   Flame, 
   Calendar,
-  ChevronRight,
   TrendingUp,
   Brain,
   History,
