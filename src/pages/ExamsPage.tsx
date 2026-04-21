@@ -1,263 +1,303 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import type { Area, Dificultad, Exercise } from '@/types';
-import { Link } from 'react-router-dom';
-import { 
-  GraduationCap, 
-  Settings2, 
-  HelpCircle, 
-  BrainCircuit,
-  Play,
-  ArrowLeft,
-  ChevronRight,
-  ChevronLeft,
-  Timer,
-  CheckCircle,
-  Flag,
-  AlertCircle,
-  Trophy,
-  Zap
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
+import type { Exercise, Exam, Area } from '@/types';
+import { 
+  Play, 
+  Timer, 
+  CheckCircle2, 
+  AlertCircle, 
+  ChevronRight, 
+  ChevronLeft,
+  Clock,
+  Target,
+  Trophy,
+  History,
+  Brain,
+  Stethoscope,
+  Cpu,
+  Gavel,
+  BadgeDollarSign
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '@/lib/utils';
+import { Link } from 'react-router-dom';
+
+type BlockId = 'A' | 'B' | 'C' | 'D';
+
+interface BlockConfig {
+  id: BlockId;
+  name: string;
+  description: string;
+  icon: any;
+  color: string;
+  distribution: Partial<Record<Area, number>>; // Porcentajes
+}
+
+const BLOCKS: BlockConfig[] = [
+  {
+    id: 'A',
+    name: 'Salud',
+    description: 'Medicina, Farmacia, Odontología',
+    icon: Stethoscope,
+    color: 'emerald',
+    distribution: { 'Ciencias Naturales': 40, 'Razonamiento Verbal': 20, 'Razonamiento Matemático': 15, 'Matemáticas': 10, 'Comunicación': 15 }
+  },
+  {
+    id: 'B',
+    name: 'Ingenierías',
+    description: 'Sistemas, Civil, Mecánica',
+    icon: Cpu,
+    color: 'blue',
+    distribution: { 'Matemáticas': 30, 'Ciencias Naturales': 20, 'Razonamiento Matemático': 25, 'Razonamiento Verbal': 15, 'Comunicación': 10 }
+  },
+  {
+    id: 'C',
+    name: 'Letras / Sociales',
+    description: 'Derecho, Psicología, Educación',
+    icon: Gavel,
+    color: 'rose',
+    distribution: { 'Razonamiento Verbal': 30, 'Ciencias Sociales': 25, 'Comunicación': 20, 'Razonamiento Matemático': 15, 'Inglés': 10 }
+  },
+  {
+    id: 'D',
+    name: 'Económicas',
+    description: 'Admin, Contabilidad, Economía',
+    icon: BadgeDollarSign,
+    color: 'amber',
+    distribution: { 'Razonamiento Matemático': 30, 'Ciencias Sociales': 20, 'Matemáticas': 15, 'Razonamiento Verbal': 20, 'Comunicación': 15 }
+  }
+];
 
 export const ExamsPage: React.FC = () => {
   const { user } = useAuth();
-  const [step, setStep] = useState<'config' | 'exam' | 'results'>('config');
+  const [step, setStep] = useState<'setup' | 'block' | 'exam' | 'results'>('setup');
+  const [loading, setLoading] = useState(false);
+  const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [userAnswers, setUserAnswers] = useState<Record<string, number>>({});
+  const [results, setResults] = useState<{ score: number, total: number, time: number } | null>(null);
+  const [time, setTime] = useState(0);
   
-  // Config state
-  const [config, setConfig] = useState({
-    numQuestions: 10,
-    areas: [] as Area[],
-    difficulty: 'All' as Dificultad | 'All',
-    maxTime: 15 // minutes
+  const [settings, setSettings] = useState({
+    count: 20,
+    timeLimit: 30,
+    blockId: 'B' as BlockId
   });
 
-  // Exam state
-  const [questions, setQuestions] = useState<Exercise[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, number>>({});
-  const [marked, setMarked] = useState<Set<string>>(new Set());
-  const [startTime, setStartTime] = useState<number>(0);
-  const [timeLeft, setTimeLeft] = useState<number>(0);
-
-  // Results state
-  const [results, setResults] = useState<{
-    score: number,
-    total: number,
-    timeSpent: number,
-    questions: Exercise[]
-  } | null>(null);
+  useEffect(() => {
+    let timer: any;
+    if (step === 'exam') {
+      timer = setInterval(() => {
+        setTime(prev => prev + 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [step]);
 
   const startExam = async () => {
-    let query = supabase.from('exercises').select('*');
-    
-    if (config.areas.length > 0) {
-      query = query.in('area', config.areas);
+    setLoading(true);
+    const selectedBlock = BLOCKS.find(b => b.id === settings.blockId)!;
+    let allQuestions: Exercise[] = [];
+
+    try {
+      // Fetch questions area by area based on distribution
+      for (const [area, percentage] of Object.entries(selectedBlock.distribution)) {
+        const countForArea = Math.ceil((settings.count * (percentage as number)) / 100);
+        
+        const { data } = await supabase
+          .from('exercises')
+          .select('*')
+          .eq('area', area)
+          .limit(countForArea);
+        
+        if (data) allQuestions = [...allQuestions, ...data];
+      }
+
+      // Shuffle and trim to exact count
+      allQuestions = allQuestions.sort(() => Math.random() - 0.5).slice(0, settings.count);
+      
+      // If not enough questions, fill with random ones
+      if (allQuestions.length < settings.count) {
+        const { data: extra } = await supabase
+          .from('exercises')
+          .select('*')
+          .limit(settings.count - allQuestions.length);
+        if (extra) allQuestions = [...allQuestions, ...extra];
+      }
+
+      setExercises(allQuestions);
+      setStep('exam');
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
-    if (config.difficulty !== 'All') {
-      query = query.eq('dificultad', config.difficulty);
-    }
-
-    const { data, error } = await query;
-    if (error || !data) return;
-
-    const shuffled = [...data].sort(() => 0.5 - Math.random());
-    const selected = shuffled.slice(0, config.numQuestions);
-
-    setQuestions(selected);
-    setCurrentIndex(0);
-    setAnswers({});
-    setMarked(new Set());
-    setStartTime(Date.now());
-    setTimeLeft(config.maxTime * 60);
-    setStep('exam');
   };
 
   const finishExam = async () => {
-    const timeSpent = Math.floor((Date.now() - startTime) / 1000);
-    let correctCount = 0;
-    
-    questions.forEach(q => {
-      if (answers[q.id] === q.respuesta_correcta) {
-        correctCount++;
+    let score = 0;
+    exercises.forEach((ex) => {
+      if (userAnswers[ex.id] === ex.respuesta_correcta) {
+        score++;
       }
     });
 
-    const { data: examData } = await supabase.from('exams').insert({
-      user_id: user?.id,
-      score: correctCount,
-      total_questions: questions.length,
-      time_spent_seconds: timeSpent
-    }).select().single();
+    const finalResults = {
+      score,
+      total: exercises.length,
+      time
+    };
 
-    if (examData) {
-      const answersToInsert = questions.map(q => ({
-        exam_id: examData.id,
-        exercise_id: q.id,
-        user_answer: answers[q.id] ?? null,
-        is_correct: answers[q.id] === q.respuesta_correcta
-      }));
-      
-      await supabase.from('exam_answers').insert(answersToInsert);
-
-      const { data: profile } = await supabase.from('profiles').select('points').eq('id', user?.id).single();
-      await supabase.from('profiles').update({ points: (profile?.points || 0) + (correctCount * 5) }).eq('id', user?.id);
-    }
-
-    setResults({
-      score: correctCount,
-      total: questions.length,
-      timeSpent,
-      questions
-    });
+    setResults(finalResults);
     setStep('results');
+
+    // Save to Supabase
+    if (user) {
+      const { data: examData, error: examError } = await supabase
+        .from('exams')
+        .insert([{
+          user_id: user.id,
+          score,
+          total_questions: exercises.length,
+          time_spent_seconds: time
+        }])
+        .select()
+        .single();
+
+      if (examData) {
+        const answers = exercises.map(ex => ({
+          exam_id: examData.id,
+          exercise_id: ex.id,
+          user_answer: userAnswers[ex.id] ?? null,
+          is_correct: userAnswers[ex.id] === ex.respuesta_correcta
+        }));
+        await supabase.from('exam_answers').insert(answers);
+        
+        // Reward points
+        const points = score * 10;
+        await supabase.rpc('increment_points', { user_id: user.id, amount: points });
+      }
+    }
   };
 
-  React.useEffect(() => {
-    if (step !== 'exam') return;
-    const interval = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          finishExam();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [step]);
-
-  const formatTime = (seconds: number) => {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m}:${s < 10 ? '0' : ''}${s}`;
-  };
-
-  if (step === 'config') {
+  if (step === 'setup') {
     return (
-      <div className="max-w-5xl mx-auto py-12 space-y-12">
-        <div className="text-center space-y-4">
-          <div className="inline-flex p-6 rounded-[2.5rem] bg-indigo-600 text-white shadow-2xl shadow-indigo-200 animate-float">
-            <BrainCircuit className="w-14 h-14" />
-          </div>
-          <h1 className="text-6xl font-black text-slate-900 tracking-tight">Simulador de Admisión</h1>
-          <p className="text-2xl text-slate-500 font-medium max-w-2xl mx-auto">Pon a prueba tus conocimientos en un entorno real y cronometrado.</p>
+      <div className="space-y-12">
+        <div className="text-center max-w-3xl mx-auto space-y-4">
+          <h1 className="text-5xl font-black text-slate-900 tracking-tight">Simulador de Admisión</h1>
+          <p className="text-xl text-slate-500 font-medium">Configura tu experiencia de examen oficial.</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="card-premium p-10 space-y-10">
-            <div className="flex items-center gap-4 text-2xl font-black text-slate-800">
-              <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl">
-                <Settings2 className="w-6 h-6" />
-              </div>
-              <span>Configuración</span>
-            </div>
-            
-            <div className="space-y-10">
-              <div className="space-y-4">
-                <div className="flex justify-between items-center text-sm font-black text-slate-400 uppercase tracking-widest">
-                  <span>Cant. de preguntas</span>
-                  <span className="text-blue-600 bg-blue-50 px-3 py-1 rounded-lg">{config.numQuestions}</span>
-                </div>
-                <input 
-                  type="range" min="5" max="50" step="5"
-                  value={config.numQuestions}
-                  onChange={(e) => setConfig({...config, numQuestions: parseInt(e.target.value)})}
-                  className="w-full h-3 bg-slate-100 rounded-full appearance-none cursor-pointer accent-blue-600 transition-all" 
-                />
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex justify-between items-center text-sm font-black text-slate-400 uppercase tracking-widest">
-                  <span>Tiempo límite (min)</span>
-                  <span className="text-indigo-600 bg-indigo-50 px-3 py-1 rounded-lg">{config.maxTime}</span>
-                </div>
-                <input 
-                  type="range" min="5" max="120" step="5"
-                  value={config.maxTime}
-                  onChange={(e) => setConfig({...config, maxTime: parseInt(e.target.value)})}
-                  className="w-full h-3 bg-slate-100 rounded-full appearance-none cursor-pointer accent-indigo-600 transition-all" 
-                />
-              </div>
-
-              <div className="space-y-4">
-                <label className="text-sm font-black text-slate-400 uppercase tracking-widest block">Nivel de Dificultad</label>
-                <div className="flex flex-wrap gap-3">
-                  {['All', 'Bajo', 'Medio', 'Alto'].map(d => (
-                    <button
-                      key={d}
-                      onClick={() => setConfig({...config, difficulty: d as any})}
-                      className={cn(
-                        "flex-1 px-6 py-4 rounded-2xl text-sm font-black border-2 transition-all",
-                        config.difficulty === d 
-                          ? "bg-slate-900 text-white border-slate-900 shadow-xl" 
-                          : "bg-white text-slate-500 border-slate-100 hover:border-slate-200"
-                      )}
-                    >
-                      {d === 'All' ? 'Mixto' : d}
-                    </button>
-                  ))}
-                </div>
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-5xl mx-auto">
+          <div className="card-premium p-10 space-y-8">
+            <h3 className="text-2xl font-black text-slate-800 flex items-center gap-3">
+              <Target className="text-blue-600" />
+              Cantidad de Preguntas
+            </h3>
+            <div className="grid grid-cols-3 gap-4">
+              {[10, 20, 50, 100].map(n => (
+                <button
+                  key={n}
+                  onClick={() => setSettings({...settings, count: n})}
+                  className={cn(
+                    "py-4 rounded-2xl font-black transition-all border-2",
+                    settings.count === n 
+                      ? "bg-blue-600 text-white border-blue-600 shadow-xl shadow-blue-200" 
+                      : "bg-white text-slate-500 border-slate-100 hover:border-blue-200"
+                  )}
+                >
+                  {n}
+                </button>
+              ))}
             </div>
           </div>
 
-          <div className="card-premium p-10 space-y-10 flex flex-col">
-            <div className="flex items-center gap-4 text-2xl font-black text-slate-800">
-              <div className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl">
-                <HelpCircle className="w-6 h-6" />
-              </div>
-              <span>Áreas a evaluar</span>
-            </div>
-            <div className="flex-1 grid grid-cols-1 gap-3 overflow-y-auto max-h-[400px] pr-2 custom-scrollbar">
-              {[
-                'Matemáticas', 'Comunicación', 'Ciencias Naturales', 
-                'Ciencias Sociales', 'Inglés', 'Razonamiento Matemático', 'Razonamiento Verbal'
-              ].map(area => {
-                const isSelected = config.areas.includes(area as Area);
-                return (
-                  <label 
-                    key={area}
-                    className={cn(
-                      "flex items-center justify-between p-5 rounded-[1.5rem] border-2 cursor-pointer transition-all",
-                      isSelected 
-                        ? "border-emerald-500 bg-emerald-50 text-emerald-900 shadow-md scale-[1.02]" 
-                        : "border-slate-100 bg-slate-50 hover:border-slate-200"
-                    )}
-                  >
-                    <span className="text-lg font-bold">{area}</span>
-                    <input 
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() => {
-                        const newAreas = isSelected 
-                          ? config.areas.filter(a => a !== area)
-                          : [...config.areas, area as Area];
-                        setConfig({...config, areas: newAreas});
-                      }}
-                      className="w-6 h-6 rounded-lg accent-emerald-600"
-                    />
-                  </label>
-                );
-              })}
-            </div>
-            <div className="pt-4 p-5 bg-blue-50 rounded-2xl flex items-center gap-4">
-              <Zap className="w-6 h-6 text-blue-600 fill-blue-600" />
-              <p className="text-sm font-bold text-blue-800">Si no marcas ninguna, evaluaremos todas las áreas aleatoriamente.</p>
+          <div className="card-premium p-10 space-y-8">
+            <h3 className="text-2xl font-black text-slate-800 flex items-center gap-3">
+              <Clock className="text-orange-500" />
+              Tiempo Límite (min)
+            </h3>
+            <div className="grid grid-cols-3 gap-4">
+              {[15, 30, 60, 180].map(m => (
+                <button
+                  key={m}
+                  onClick={() => setSettings({...settings, timeLimit: m})}
+                  className={cn(
+                    "py-4 rounded-2xl font-black transition-all border-2",
+                    settings.timeLimit === m 
+                      ? "bg-orange-500 text-white border-orange-500 shadow-xl shadow-orange-200" 
+                      : "bg-white text-slate-500 border-slate-100 hover:border-orange-200"
+                  )}
+                >
+                  {m}
+                </button>
+              ))}
             </div>
           </div>
         </div>
 
-        <div className="flex justify-center pt-8">
-          <button
-            onClick={startExam}
-            className="group px-16 py-6 bg-indigo-600 text-white text-2xl font-black rounded-[2.5rem] shadow-2xl shadow-indigo-200 hover:scale-105 active:scale-95 transition-all flex items-center gap-4"
+        <div className="flex justify-center">
+          <button 
+            onClick={() => setStep('block')}
+            className="px-12 py-6 bg-slate-900 text-white font-black rounded-[2rem] shadow-2xl hover:scale-105 transition-all flex items-center gap-4 text-xl"
           >
-            <Play className="w-8 h-8 fill-current" />
-            Empezar Reto
+            Siguiente Paso
+            <ChevronRight className="w-6 h-6" />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === 'block') {
+    return (
+      <div className="space-y-12">
+        <div className="text-center max-w-3xl mx-auto space-y-4">
+           <button onClick={() => setStep('setup')} className="text-blue-600 font-bold flex items-center gap-2 mx-auto hover:gap-3 transition-all mb-4">
+             <ChevronLeft className="w-5 h-5" /> Volver a configuración
+           </button>
+          <h1 className="text-5xl font-black text-slate-900 tracking-tight">Elige tu Bloque</h1>
+          <p className="text-xl text-slate-500 font-medium">Las preguntas se distribuirán según tu carrera elegida.</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+          {BLOCKS.map((block) => (
+            <button
+              key={block.id}
+              onClick={() => setSettings({...settings, blockId: block.id})}
+              className={cn(
+                "card-premium p-8 text-left space-y-6 transition-all border-4",
+                settings.blockId === block.id 
+                  ? "border-blue-500 shadow-2xl shadow-blue-100 scale-105" 
+                  : "border-transparent opacity-80 hover:opacity-100"
+              )}
+            >
+              <div className={cn(
+                "w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg",
+                block.id === 'A' ? "bg-emerald-500 text-white" :
+                block.id === 'B' ? "bg-blue-500 text-white" :
+                block.id === 'C' ? "bg-rose-500 text-white" : "bg-amber-500 text-white"
+              )}>
+                <block.icon className="w-8 h-8" />
+              </div>
+              <div>
+                <h4 className="text-2xl font-black text-slate-800">Bloque {block.id}</h4>
+                <p className="font-bold text-slate-600">{block.name}</p>
+              </div>
+              <p className="text-sm text-slate-400 font-medium">{block.description}</p>
+            </button>
+          ))}
+        </div>
+
+        <div className="flex justify-center">
+          <button 
+            onClick={startExam}
+            disabled={loading}
+            className="px-16 py-6 bg-blue-600 text-white font-black rounded-[2rem] shadow-2xl shadow-blue-200 hover:scale-105 transition-all flex items-center gap-4 text-2xl"
+          >
+            {loading ? <Loader2 className="w-8 h-8 animate-spin" /> : <Play className="w-8 h-8 fill-white" />}
+            Empezar Simulacro
           </button>
         </div>
       </div>
@@ -265,178 +305,100 @@ export const ExamsPage: React.FC = () => {
   }
 
   if (step === 'exam') {
-    const q = questions[currentIndex];
+    const question = exercises[currentQuestion];
+    const progress = ((currentQuestion + 1) / exercises.length) * 100;
+
     return (
-      <div className="fixed inset-0 bg-slate-50 z-[100] flex flex-col">
-        {/* Header Examen Premium */}
-        <header className="glass-effect px-8 py-6 flex items-center justify-between shadow-lg">
-          <div className="flex items-center gap-4 group">
-            <div className="p-3 bg-indigo-600 rounded-2xl shadow-lg">
-              <GraduationCap className="w-8 h-8 text-white" />
+      <div className="max-w-5xl mx-auto space-y-8">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-6 glass-effect p-8 rounded-[2.5rem] shadow-xl">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-blue-100 text-blue-600 rounded-2xl font-black">
+              {currentQuestion + 1} / {exercises.length}
             </div>
-            <div>
-              <h2 className="font-black text-xl text-slate-800 leading-none">Examen de Admisión</h2>
-              <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest">Simulacro Oficial</p>
+            <div className="w-48 h-3 bg-slate-100 rounded-full overflow-hidden">
+               <motion.div 
+                 initial={{ width: 0 }}
+                 animate={{ width: `${progress}%` }}
+                 className="h-full bg-blue-500" 
+               />
             </div>
           </div>
           
-          <div className="flex items-center gap-10">
-            <div className="flex items-center gap-4 px-8 py-4 bg-white rounded-3xl shadow-md border border-slate-100">
-              <Timer className={cn("w-7 h-7", timeLeft < 60 ? "text-rose-500 animate-pulse" : "text-indigo-600")} />
-              <span className={cn("text-3xl font-black font-mono", timeLeft < 60 ? "text-rose-600" : "text-slate-800")}>
-                {formatTime(timeLeft)}
-              </span>
-            </div>
-            <button 
-              onClick={() => { if(confirm('¿Seguro que deseas finalizar el examen ahora?')) finishExam(); }}
-              className="px-8 py-4 bg-rose-600 text-white font-black rounded-2xl hover:bg-rose-700 shadow-xl shadow-rose-100 transition-all text-lg"
-            >
-              Finalizar
-            </button>
+          <div className={cn(
+            "flex items-center gap-3 px-6 py-3 rounded-2xl font-black text-xl",
+            time > settings.timeLimit * 60 ? "bg-red-50 text-red-600 animate-pulse" : "bg-slate-900 text-white"
+          )}>
+            <Timer className="w-6 h-6" />
+            {Math.floor(time / 60)}:{(time % 60).toString().padStart(2, '0')}
           </div>
-        </header>
+        </div>
 
-        <div className="flex-1 flex overflow-hidden">
-          {/* Navigation drawer updated */}
-          <aside className="w-80 border-r bg-white hidden lg:flex flex-col p-8 space-y-8">
-            <div className="flex items-center gap-3 text-slate-400">
-              <Settings2 className="w-5 h-5" />
-              <h3 className="font-black text-xs uppercase tracking-[0.2em]">Mapa del Examen</h3>
-            </div>
-            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-              <div className="grid grid-cols-4 gap-3">
-                {questions.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setCurrentIndex(i)}
-                    className={cn(
-                      "w-full aspect-square rounded-2xl flex items-center justify-center text-sm font-black border-2 transition-all",
-                      currentIndex === i ? "border-indigo-600 bg-indigo-50 text-indigo-700 scale-105 shadow-md" : 
-                      marked.has(questions[i].id) ? "border-amber-400 bg-amber-50 text-amber-700" :
-                      answers[questions[i].id] !== undefined ? "border-emerald-400 bg-emerald-50 text-emerald-700" :
-                      "border-slate-100 bg-slate-50 text-slate-400 hover:border-slate-200"
-                    )}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentQuestion}
+            initial={{ x: 20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: -20, opacity: 0 }}
+            className="card-premium p-10 md:p-16 space-y-10"
+          >
+            <div className="space-y-4">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-xs font-black uppercase tracking-wider">
+                {question.area} • {question.subarea}
               </div>
+              <h2 className="text-3xl font-bold text-slate-800 leading-tight">
+                {question.enunciado}
+              </h2>
             </div>
-            <div className="p-6 bg-slate-50 rounded-3xl space-y-2">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-emerald-500 rounded-full" />
-                <span className="text-xs font-bold text-slate-500">Respondida</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-amber-500 rounded-full" />
-                <span className="text-xs font-bold text-slate-500">Para revisar</span>
-              </div>
-            </div>
-          </aside>
 
-          {/* Main Question Area updated */}
-          <main className="flex-1 overflow-y-auto p-4 md:p-14 bg-slate-50/50">
-            <div className="max-w-4xl mx-auto space-y-12">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div className="space-y-1">
-                   <p className="text-xs font-black text-indigo-600 uppercase tracking-[0.3em]">Pregunta {currentIndex + 1} de {questions.length}</p>
-                   <h4 className="text-2xl font-black text-slate-800">{q.area} • <span className="text-slate-400 font-bold">{q.subarea}</span></h4>
-                </div>
-                <button 
-                  onClick={() => {
-                    const newMarked = new Set(marked);
-                    if (marked.has(q.id)) newMarked.delete(q.id);
-                    else newMarked.add(q.id);
-                    setMarked(newMarked);
-                  }}
+            <div className="grid grid-cols-1 gap-4">
+              {question.opciones.map((opt, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setUserAnswers({ ...userAnswers, [question.id]: idx })}
                   className={cn(
-                    "flex items-center gap-3 font-black text-sm px-6 py-3 rounded-2xl border-2 transition-all",
-                    marked.has(q.id) 
-                      ? "bg-amber-500 border-amber-500 text-white shadow-lg" 
-                      : "bg-white border-slate-100 text-slate-400 hover:border-amber-200 hover:text-amber-600"
+                    "flex items-center gap-6 p-6 rounded-[1.5rem] text-left transition-all group border-2",
+                    userAnswers[question.id] === idx
+                      ? "bg-blue-600 text-white border-blue-600 shadow-xl scale-[1.02]"
+                      : "bg-white text-slate-600 border-slate-100 hover:border-blue-200 hover:bg-blue-50"
                   )}
                 >
-                  <Flag className="w-5 h-5" />
-                  {marked.has(q.id) ? 'Marcada para revisión' : 'Marcar para revisión'}
+                  <div className={cn(
+                    "w-12 h-12 rounded-xl flex items-center justify-center font-black text-lg shrink-0 transition-all",
+                    userAnswers[question.id] === idx ? "bg-white/20 text-white" : "bg-slate-100 text-slate-400 group-hover:bg-blue-100"
+                  )}>
+                    {String.fromCharCode(65 + idx)}
+                  </div>
+                  <span className="text-lg font-bold">{opt}</span>
                 </button>
-              </div>
-
-              <div className="bg-white border border-slate-100 rounded-[3.5rem] p-10 md:p-16 shadow-2xl shadow-slate-200/50 relative overflow-hidden">
-                <h3 className="text-3xl md:text-4xl font-black text-slate-800 leading-tight mb-16 relative z-10">
-                  {q.enunciado}
-                </h3>
-
-                <div className="grid grid-cols-1 gap-5 relative z-10">
-                  {q.opciones.map((opt, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setAnswers({...answers, [q.id]: idx})}
-                      className={cn(
-                        "w-full p-6 rounded-[2rem] border-2 text-left transition-all flex items-center justify-between group",
-                        answers[q.id] === idx 
-                          ? "border-indigo-600 bg-indigo-50 shadow-lg scale-[1.01]" 
-                          : "border-slate-100 bg-slate-50/50 hover:bg-slate-50 hover:border-slate-200"
-                      )}
-                    >
-                      <div className="flex items-center gap-6">
-                        <div className={cn(
-                          "w-12 h-12 rounded-2xl flex items-center justify-center font-black text-xl transition-all",
-                          answers[q.id] === idx ? "bg-indigo-600 text-white" : "bg-white text-slate-400 border border-slate-100 group-hover:border-slate-300"
-                        )}>
-                          {String.fromCharCode(65 + idx)}
-                        </div>
-                        <span className={cn("text-xl font-bold", answers[q.id] === idx ? "text-indigo-900" : "text-slate-600")}>
-                          {opt}
-                        </span>
-                      </div>
-                      <AnimatePresence>
-                        {answers[q.id] === idx && (
-                          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="p-2 bg-indigo-600 rounded-full text-white">
-                            <CheckCircle className="w-6 h-6" />
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between pt-10">
-                <button
-                  disabled={currentIndex === 0}
-                  onClick={() => setCurrentIndex(prev => prev - 1)}
-                  className="flex items-center gap-3 px-8 py-5 rounded-[2rem] border-2 border-slate-200 text-slate-500 font-black hover:bg-slate-100 disabled:opacity-20 transition-all"
-                >
-                  <ChevronLeft className="w-6 h-6" />
-                  Anterior
-                </button>
-                <div className="hidden sm:flex gap-2">
-                  {questions.map((_, i) => (
-                    <div 
-                      key={i} 
-                      className={cn(
-                        "h-2 rounded-full transition-all duration-300",
-                        i === currentIndex ? "w-10 bg-indigo-600" : "w-2 bg-slate-200"
-                      )} 
-                    />
-                  ))}
-                </div>
-                <button
-                  onClick={() => {
-                    if (currentIndex < questions.length - 1) {
-                      setCurrentIndex(prev => prev + 1);
-                    } else {
-                      if(confirm('Has terminado todas las preguntas. ¿Deseas finalizar el simulacro?')) finishExam();
-                    }
-                  }}
-                  className="flex items-center gap-3 px-10 py-5 rounded-[2rem] bg-slate-900 text-white font-black hover:bg-indigo-600 hover:scale-105 active:scale-95 shadow-xl transition-all"
-                >
-                  {currentIndex === questions.length - 1 ? 'Finalizar Examen' : 'Siguiente'}
-                  <ChevronRight className="w-6 h-6" />
-                </button>
-              </div>
+              ))}
             </div>
-          </main>
+          </motion.div>
+        </AnimatePresence>
+
+        <div className="flex justify-between items-center">
+          <button
+            onClick={() => setCurrentQuestion(prev => Math.max(0, prev - 1))}
+            disabled={currentQuestion === 0}
+            className="p-6 rounded-3xl bg-white text-slate-400 hover:text-slate-900 disabled:opacity-0 transition-all shadow-sm"
+          >
+            <ChevronLeft className="w-8 h-8" />
+          </button>
+          
+          {currentQuestion === exercises.length - 1 ? (
+            <button
+              onClick={finishExam}
+              className="px-12 py-6 bg-emerald-500 text-white font-black rounded-[2rem] shadow-2xl shadow-emerald-200 hover:scale-105 transition-all text-xl"
+            >
+              Finalizar Examen
+            </button>
+          ) : (
+            <button
+              onClick={() => setCurrentQuestion(prev => Math.min(exercises.length - 1, prev + 1))}
+              className="p-6 rounded-3xl bg-blue-600 text-white hover:scale-105 transition-all shadow-xl shadow-blue-200"
+            >
+              <ChevronRight className="w-8 h-8" />
+            </button>
+          )}
         </div>
       </div>
     );
@@ -446,121 +408,103 @@ export const ExamsPage: React.FC = () => {
     const scorePercentage = (results.score / results.total) * 100;
     
     return (
-      <motion.div 
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="max-w-5xl mx-auto py-12"
-      >
-        <div className="card-premium overflow-hidden shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)]">
-          <div className="bg-gradient-to-br from-indigo-800 to-blue-600 p-16 md:p-24 text-center ">
-            <h1 className="text-3xl font-black text-white/60 mb-6 uppercase tracking-[0.5em]">Score General</h1>
-            <div className="relative inline-block mb-10">
-              <div className="absolute inset-0 bg-white/20 blur-3xl rounded-full scale-110 animate-pulse" />
-              <div className="relative w-56 h-56 rounded-full border-8 border-white/20 flex flex-col items-center justify-center bg-white/10 backdrop-blur-xl">
-                 <span className="text-8xl font-black text-white leading-none">{Math.round(scorePercentage)}</span>
-                 <span className="text-xl font-bold text-white/70">%</span>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
-              <div className="p-6 bg-white/10 rounded-[2rem] border border-white/10">
-                 <p className="text-[10px] font-black text-white/50 uppercase mb-2">Aciertos</p>
-                 <p className="text-3xl font-black text-white">{results.score} <span className="text-lg font-bold opacity-40">/ {results.total}</span></p>
-              </div>
-              <div className="p-6 bg-white/10 rounded-[2rem] border border-white/10">
-                 <p className="text-[10px] font-black text-white/50 uppercase mb-2">Tiempo total</p>
-                 <p className="text-3xl font-black text-white">{formatTime(results.timeSpent)}</p>
-              </div>
-              <div className="p-6 bg-white/20 rounded-[2rem] border border-white/20">
-                 <p className="text-[10px] font-black text-white/50 uppercase mb-2">XP Ganada</p>
-                 <p className="text-3xl font-black text-yellow-300">+{results.score * 5}</p>
-              </div>
+      <div className="max-w-4xl mx-auto space-y-10 py-10">
+        <motion.div 
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="card-premium p-12 text-center space-y-8 overflow-hidden relative"
+        >
+          <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-emerald-500 to-indigo-500" />
+          
+          <div className="space-y-2">
+            <h2 className="text-5xl font-black text-slate-900">Resultados del Simulacro</h2>
+            <p className="text-slate-500 font-bold uppercase tracking-widest text-sm">Bloque {BLOCKS.find(b => b.id === settings.blockId)?.name}</p>
+          </div>
+
+          <div className="flex justify-center relative">
+            <div className="w-64 h-64 rounded-full border-[12px] border-slate-50 flex flex-col items-center justify-center relative">
+               <motion.div 
+                 initial={{ opacity: 0 }}
+                 animate={{ opacity: 1 }}
+                 className="text-6xl font-black text-slate-800"
+               >
+                 {Math.round(scorePercentage)}%
+               </motion.div>
+               <div className="text-slate-400 font-bold uppercase text-xs tracking-tighter">Puntaje Total</div>
             </div>
           </div>
 
-          <div className="p-10 md:p-20 bg-slate-50 space-y-12">
-            <div className="flex flex-col md:flex-row items-center gap-8 p-10 bg-white rounded-[3rem] border-2 border-slate-100 shadow-xl">
-              <div className="w-24 h-24 bg-blue-50 text-blue-600 rounded-[2rem] flex items-center justify-center">
-                <Trophy className="w-12 h-12" />
-              </div>
-              <div className="text-center md:text-left flex-1">
-                <h3 className="text-3xl font-black text-slate-800 mb-2">Simulacro Finalizado</h3>
-                <p className="text-slate-500 font-medium text-lg italic">"Cada error es una oportunidad de aprendizaje. Sigue reforzando tus áreas débiles."</p>
-              </div>
-              <button 
-                onClick={() => setStep('config')}
-                className="px-10 py-5 bg-indigo-600 text-white font-black rounded-[1.5rem] hover:scale-105 active:scale-95 transition-all text-xl shadow-2xl shadow-indigo-200"
-              >
-                Nuevo Intento
-              </button>
-            </div>
+          <div className="grid grid-cols-3 gap-6">
+             <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
+               <div className="text-3xl font-black text-slate-800">{results.score}</div>
+               <div className="text-xs font-bold text-slate-400 uppercase">Correctas</div>
+             </div>
+             <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
+               <div className="text-3xl font-black text-slate-800">{results.total - results.score}</div>
+               <div className="text-xs font-bold text-slate-400 uppercase">Incorrectas</div>
+             </div>
+             <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
+               <div className="text-3xl font-black text-slate-800">{Math.floor(results.time / 60)}m</div>
+               <div className="text-xs font-bold text-slate-400 uppercase">Tiempo</div>
+             </div>
+          </div>
 
-            <div className="space-y-8">
-              <h2 className="text-4xl font-black text-slate-900 tracking-tight flex items-center gap-4">
-                <HelpCircle className="w-10 h-10 text-indigo-600" />
-                Revisión Detallada
-              </h2>
-              <div className="grid grid-cols-1 gap-6">
-                {results.questions.map((q, i) => {
-                  const isCorrect = answers[q.id] === q.respuesta_correcta;
-                  return (
-                    <div key={q.id} className="bg-white border border-slate-100 p-10 rounded-[3rem] space-y-6 shadow-sm hover:shadow-md transition-all">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-black uppercase text-slate-400 tracking-widest">Reactivo {i + 1} • {q.area}</span>
-                        {isCorrect ? (
-                          <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 px-4 py-2 rounded-full font-black text-xs border border-emerald-100">
-                            <CheckCircle className="w-4 h-4" /> ACIERTO
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2 text-rose-600 bg-rose-50 px-4 py-2 rounded-full font-black text-xs border border-rose-100">
-                            <AlertCircle className="w-4 h-4" /> ERROR
-                          </div>
-                        )}
-                      </div>
-                      <p className="text-2xl font-bold text-slate-800 leading-tight">{q.enunciado}</p>
-                      <div className="p-8 bg-blue-50/50 rounded-[2rem] border border-blue-100/50">
-                        <div className="flex items-center gap-2 mb-3 text-blue-800 font-black text-sm uppercase">
-                          <Info className="w-4 h-4" /> Justificación Técnica
-                        </div>
-                        <p className="text-slate-600 font-medium leading-relaxed">{q.explicacion}</p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+          <div className="flex flex-col md:flex-row gap-4 justify-center pt-6">
+            <button 
+              onClick={() => {
+                setStep('setup');
+                setExercises([]);
+                setUserAnswers({});
+                setTime(0);
+              }}
+              className="px-10 py-5 bg-blue-600 text-white font-black rounded-2xl shadow-xl hover:scale-105 transition-all"
+            >
+              Nuevo Simulacro
+            </button>
+            <Link 
+              to="/"
+              className="px-10 py-5 bg-slate-100 text-slate-600 font-black rounded-2xl hover:bg-slate-200 transition-all flex items-center justify-center gap-2"
+            >
+              Ir al Dashboard
+            </Link>
+          </div>
+        </motion.div>
 
-            <div className="flex justify-center pt-10">
-              <Link to="/" className="flex items-center gap-3 text-slate-400 font-black hover:text-indigo-600 transition-all text-lg">
-                <ArrowLeft className="w-6 h-6" /> Regresar al Dashboard
-              </Link>
-            </div>
+        <div className="space-y-6">
+          <h3 className="text-2xl font-black text-slate-800 flex items-center gap-3 px-4">
+            <History className="text-indigo-500" />
+            Revisión Detallada
+          </h3>
+          <div className="space-y-4">
+            {exercises.map((ex, idx) => (
+              <div key={ex.id} className="card-premium p-8 space-y-6">
+                <div className="flex justify-between items-start gap-4">
+                   <div className="flex items-center gap-3">
+                     <span className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center font-black text-slate-500">{idx + 1}</span>
+                     <span className="text-sm font-black text-indigo-600 uppercase bg-indigo-50 px-3 py-1 rounded-full">{ex.area}</span>
+                   </div>
+                   {userAnswers[ex.id] === ex.respuesta_correcta ? (
+                     <span className="px-4 py-1.5 bg-emerald-50 text-emerald-600 rounded-full text-xs font-black flex items-center gap-2 border border-emerald-100">
+                       <CheckCircle2 className="w-4 h-4" /> CORRECTA
+                     </span>
+                   ) : (
+                     <span className="px-4 py-1.5 bg-rose-50 text-rose-600 rounded-full text-xs font-black flex items-center gap-2 border border-rose-100">
+                       <AlertCircle className="w-4 h-4" /> INCORRECTA
+                     </span>
+                   )}
+                </div>
+                <p className="text-xl font-bold text-slate-800">{ex.enunciado}</p>
+                <div className="p-6 bg-slate-50 rounded-2xl border-l-4 border-indigo-500 italic text-slate-600">
+                  <span className="font-black text-indigo-600 block mb-1 not-italic uppercase text-xs">Explicación:</span>
+                  {ex.explicacion}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
-      </motion.div>
+      </div>
     );
   }
 
   return null;
 };
-
-// Simple Info icon replacement if missing from lucide
-function Info(props: any) {
-  return (
-    <svg 
-      {...props} 
-      xmlns="http://www.w3.org/2000/svg" 
-      width="24" height="24" 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
-      strokeLinejoin="round" 
-    >
-      <circle cx="12" cy="12" r="10" />
-      <path d="M12 16v-4" />
-      <path d="M12 8h.01" />
-    </svg>
-  );
-}
