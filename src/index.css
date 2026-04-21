@@ -1,61 +1,75 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
-@layer base {
-  :root {
-    --background: #ffffff;
-    --foreground: #0f172a;
-    
-    --card: #ffffff;
-    --card-foreground: #0f172a;
-    
-    --border: #e2e8f0;
-    --input: #e2e8f0;
-    
-    --primary: #3b82f6;
-    --primary-foreground: #ffffff;
+@theme {
+  --font-sans: 'Outfit', sans-serif;
+  
+  --color-primary: #3b82f6;
+  --color-background: #f8fafc;
+  --color-foreground: #0f172a;
+  --color-card: #ffffff;
+  --color-muted: #f8fafc;
+  --color-muted-foreground: #64748b;
+  --color-border: #f1f5f9;
 
-    --muted: #f1f5f9;
-    --muted-foreground: #64748b;
-  }
+  /* Area Specific Colors */
+  --color-math: #3b82f6;
+  --color-comms: #ec4899;
+  --color-nat-sci: #10b981;
+  --color-soc-sci: #f59e0b;
+  --color-english: #8b5cf6;
+  --color-math-reason: #06b6d4;
+  --color-verb-reason: #ef4444;
 
-  .dark {
-    --background: #020617;
-    --foreground: #f8fafc;
-    
-    --card: #0f172a;
-    --card-foreground: #f8fafc;
-    
-    --border: #1e293b;
-    --input: #1e293b;
-    
-    --primary: #3b82f6;
-    --primary-foreground: #ffffff;
-
-    --muted: #1e293b;
-    --muted-foreground: #94a3b8;
-  }
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
+  --radius-3xl: 2.5rem;
 }
 
 @layer base {
-  * {
-    @apply border-[color:var(--border)];
+  html {
+    font-family: var(--font-sans);
+    scroll-behavior: smooth;
   }
+  
   body {
-    @apply bg-[color:var(--background)] text-[color:var(--foreground)] antialiased transition-colors duration-200;
+    @apply bg-background text-foreground antialiased transition-colors duration-300;
+  }
+
+  * {
+    @apply border-border transition-all duration-200 ease-in-out;
+  }
+
+  .card-premium {
+    @apply bg-white border border-white/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-sm rounded-2xl hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)] hover:-translate-y-1 transition-all;
+  }
+
+  .glass-effect {
+    @apply bg-white/70 backdrop-blur-xl border border-white/20;
   }
 }
 
-/* Custom Scrollbar */
+/* Custom Scrollbar Premium */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  @apply bg-slate-300 dark:bg-slate-700 rounded-full;
+  @apply bg-slate-200 rounded-full;
 }
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-slate-400 dark:bg-slate-600;
+  @apply bg-primary rounded-full opacity-40;
+}
+
+/* Animations */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
 }
