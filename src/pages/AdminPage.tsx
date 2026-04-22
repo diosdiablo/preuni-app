@@ -64,6 +64,52 @@ export const AdminPage: React.FC = () => {
     setExercises(data || []);
   };
 
+  // Add paste event listener
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      if (activeTab !== 'create') return;
+      
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+          const blob = items[i].getAsFile();
+          if (blob) {
+            const file = new File([blob], "pasted-image.png", { type: blob.type });
+            uploadImage(file);
+          }
+        }
+      }
+    };
+
+    window.addEventListener('paste', handlePaste);
+    return () => window.removeEventListener('paste', handlePaste);
+  }, [activeTab]);
+
+  const uploadImage = async (file: File) => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('exercises')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('exercises')
+        .getPublicUrl(filePath);
+
+      setFormData(prev => ({ ...prev, image_url: publicUrl }));
+      alert('Imagen pegada y subida correctamente');
+    } catch (err: any) {
+      alert('Error subiendo imagen pegada: ' + err.message);
+    }
+  };
+
   const fetchStudents = async () => {
     const { data } = await supabase
       .from('authorized_students')
@@ -99,27 +145,7 @@ export const AdminPage: React.FC = () => {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('exercises')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('exercises')
-        .getPublicUrl(filePath);
-
-      setFormData({ ...formData, image_url: publicUrl });
-      alert('Imagen subida correctamente');
-    } catch (err: any) {
-      alert('Error subiendo imagen: ' + err.message);
-    }
+    uploadImage(file);
   };
 
   const handleSave = async (e: React.FormEvent) => {
