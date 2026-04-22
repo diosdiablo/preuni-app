@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/lib/supabase';
 import { LogOut, LayoutDashboard, BookOpen, GraduationCap, BarChart3, Menu, X, Sparkles, ShieldCheck, KeyRound, Check, AlertCircle, Loader2 } from 'lucide-react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import { cn } from '@/lib/utils';
