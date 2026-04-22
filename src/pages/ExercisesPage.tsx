@@ -46,16 +46,41 @@ export const ExercisesPage: React.FC = () => {
   };
 
 
+  const [subareas, setSubareas] = useState<Record<string, string[]>>({});
+  const [selectedSubarea, setSelectedSubarea] = useState<string | 'All'>('All');
+  const [hoveredArea, setHoveredArea] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchSubareas();
+  }, []);
+
+  const fetchSubareas = async () => {
+    const { data } = await supabase.from('exercises').select('area, subarea');
+    if (data) {
+      const map: Record<string, Set<string>> = {};
+      data.forEach(ex => {
+        if (!map[ex.area]) map[ex.area] = new Set();
+        if (ex.subarea) map[ex.area].add(ex.subarea);
+      });
+      const finalMap: Record<string, string[]> = {};
+      Object.keys(map).forEach(key => finalMap[key] = Array.from(map[key]));
+      setSubareas(finalMap);
+    }
+  };
+
   useEffect(() => {
     fetchExercises();
-  }, [selectedArea, selectedDifficulty]);
+  }, [selectedArea, selectedSubarea, selectedDifficulty]);
 
   const fetchExercises = async () => {
     setLoading(true);
     let query = supabase.from('exercises').select('*');
 
     if (selectedArea !== 'All') {
-      query = query.or(`area.eq."${selectedArea}",subarea.eq."${selectedArea}"`);
+      query = query.eq('area', selectedArea);
+    }
+    if (selectedSubarea !== 'All') {
+      query = query.eq('subarea', selectedSubarea);
     }
     if (selectedDifficulty !== 'All') {
       query = query.eq('dificultad', selectedDifficulty);
@@ -65,6 +90,16 @@ export const ExercisesPage: React.FC = () => {
     if (error) console.error(error);
     else setExercises(data || []);
     setLoading(false);
+  };
+
+  const handleAreaClick = (area: Area | 'All') => {
+    setSelectedArea(area);
+    setSelectedSubarea('All');
+  };
+
+  const handleSubareaClick = (area: Area, sub: string) => {
+    setSelectedArea(area);
+    setSelectedSubarea(sub);
   };
 
   const handleAnswer = async (optionIndex: number) => {
@@ -128,27 +163,75 @@ export const ExercisesPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Modern Filter Bar */}
-      <div className="card-premium p-4 md:p-6 overflow-x-auto scrollbar-hide">
-        <div className="flex items-center gap-2 min-w-max">
+      {/* Modern Filter Bar with Dropdowns */}
+      <div className="card-premium p-4 md:p-6 overflow-visible">
+        <div className="flex items-center gap-2">
           <div className="flex items-center gap-2 pr-4 mr-4 border-r border-slate-100">
             <Filter className="w-5 h-5 text-slate-400" />
             <span className="text-sm font-black text-slate-400 uppercase tracking-tighter">Filtros</span>
           </div>
-          {areas.map(area => (
-            <button
-              key={area}
-              onClick={() => setSelectedArea(area)}
-              className={cn(
-                "px-6 py-3 rounded-2xl text-sm font-bold transition-all whitespace-nowrap",
-                selectedArea === area 
-                  ? "bg-slate-900 text-white shadow-lg" 
-                  : "bg-slate-50 text-slate-500 hover:bg-slate-100"
-              )}
-            >
-              {area === 'All' ? 'Todas' : area}
-            </button>
-          ))}
+          <div className="flex items-center gap-2 flex-wrap">
+            {areas.map(area => (
+              <div 
+                key={area} 
+                className="relative"
+                onMouseEnter={() => setHoveredArea(area)}
+                onMouseLeave={() => setHoveredArea(null)}
+              >
+                <button
+                  onClick={() => handleAreaClick(area)}
+                  className={cn(
+                    "px-6 py-3 rounded-2xl text-sm font-bold transition-all whitespace-nowrap flex items-center gap-2",
+                    selectedArea === area 
+                      ? "bg-slate-900 text-white shadow-lg" 
+                      : "bg-slate-50 text-slate-500 hover:bg-slate-100"
+                  )}
+                >
+                  {area === 'All' ? 'Todas' : area}
+                  {area !== 'All' && subareas[area]?.length > 0 && (
+                    <div className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                  )}
+                </button>
+
+                {/* Subarea Dropdown */}
+                <AnimatePresence>
+                  {hoveredArea === area && area !== 'All' && subareas[area]?.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      className="absolute top-full left-0 mt-2 z-50 min-w-[200px] p-2 bg-white/80 backdrop-blur-xl border border-slate-100 rounded-3xl shadow-2xl shadow-slate-200"
+                    >
+                      <button
+                        onClick={() => handleAreaClick(area)}
+                        className={cn(
+                          "w-full px-4 py-2 text-left text-xs font-black uppercase tracking-wider rounded-xl transition-all",
+                          selectedSubarea === 'All' && selectedArea === area ? "bg-slate-900 text-white" : "text-slate-400 hover:bg-slate-50"
+                        )}
+                      >
+                        Ver Todo {area}
+                      </button>
+                      <div className="h-px bg-slate-100 my-2" />
+                      <div className="space-y-1">
+                        {subareas[area].map(sub => (
+                          <button
+                            key={sub}
+                            onClick={() => handleSubareaClick(area as Area, sub)}
+                            className={cn(
+                              "w-full px-4 py-2 text-left text-sm font-bold rounded-xl transition-all",
+                              selectedSubarea === sub ? "bg-blue-600 text-white" : "text-slate-600 hover:bg-blue-50 hover:text-blue-600"
+                            )}
+                          >
+                            {sub}
+                          </button>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
