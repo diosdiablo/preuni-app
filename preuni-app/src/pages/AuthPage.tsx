@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { GraduationCap, AlertCircle, Loader2 } from 'lucide-react';
-
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 
 export const AuthPage: React.FC = () => {
   const [authMode, setAuthMode] = useState<'student' | 'admin'>('student');
-  const [isRegistering, setIsRegistering] = useState(false);
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -36,6 +34,7 @@ export const AuthPage: React.FC = () => {
         email = `${identifier.trim()}@virdolores.edu`;
         finalPassword = password || identifier;
 
+        // Verificar si el DNI está autorizado
         const { data: isAuthorized } = await supabase
           .from('authorized_students')
           .select('dni')
@@ -43,37 +42,33 @@ export const AuthPage: React.FC = () => {
           .single();
 
         if (!isAuthorized) {
-          throw new Error('DNI no autorizado.');
+          throw new Error('DNI no autorizado en la base de datos institucional.');
         }
       }
 
-      if (isRegistering) {
-        const { error: signUpError } = await supabase.auth.signUp({
-          email,
-          password: finalPassword,
-        });
-        if (signUpError) throw signUpError;
-        alert('Cuenta creada. Ya puedes ingresar.');
-        setIsRegistering(false);
-      } else {
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password: finalPassword,
-        });
+      // Intentar iniciar sesión
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password: finalPassword,
+      });
 
-        if (signInError) {
-          if (authMode === 'student' && signInError.message.includes('Invalid login credentials')) {
-             await supabase.auth.signUp({ email, password: finalPassword });
-             await supabase.auth.signInWithPassword({ email, password: finalPassword });
-          } else {
-            throw signInError;
-          }
+      if (signInError) {
+        // Auto-registro para alumnos autorizados
+        if (authMode === 'student' && signInError.message.includes('Invalid login credentials')) {
+           const { error: autoReg } = await supabase.auth.signUp({ email, password: finalPassword });
+           if (autoReg) throw autoReg;
+           const { error: retry } = await supabase.auth.signInWithPassword({ email, password: finalPassword });
+           if (retry) throw retry;
+        } else {
+          throw signInError;
         }
-        // El useEffect se encargará de navegar cuando el user cambie
       }
 
     } catch (err: any) {
-      setError(err.message);
+      console.error('Auth Error:', err);
+      let msg = err.message;
+      if (msg.includes('Invalid login credentials')) msg = 'Datos incorrectos. Verifica tu DNI/Correo y Contraseña.';
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -81,72 +76,96 @@ export const AuthPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white flex flex-col md:flex-row font-sans overflow-hidden">
+      
+      {/* Lado Izquierdo: Mensaje Institucional */}
       <div className="hidden md:flex md:w-1/2 bg-[#1a237e] relative items-center justify-center p-16 text-white overflow-hidden">
-        <div className="relative z-10 max-w-lg space-y-6">
-          <GraduationCap className="w-20 h-20" />
-          <h2 className="text-5xl font-black">IE Virgen de los Dolores</h2>
-          <p className="text-xl text-blue-100">"Excelencia académica para el futuro."</p>
+        <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-blue-500/20 rounded-full blur-[120px]" />
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10" />
+
+        <div className="relative z-10 max-w-lg space-y-10">
+          <div className="w-24 h-24 bg-white/10 backdrop-blur-xl rounded-[2.5rem] border border-white/20 flex items-center justify-center shadow-2xl">
+            <GraduationCap className="w-12 h-12 text-white" />
+          </div>
+          <div className="space-y-6">
+            <h2 className="text-6xl font-black leading-tight tracking-tighter">IE Virgen de <br/> los Dolores</h2>
+            <p className="text-xl text-blue-100/80 font-medium leading-relaxed">
+              "Excelencia y valores para forjar los líderes del mañana."
+            </p>
+          </div>
         </div>
       </div>
 
-      <div className="flex-1 flex items-center justify-center p-8 bg-slate-50">
-        <div className="w-full max-w-md space-y-8">
+      {/* Lado Derecho: Formulario */}
+      <div className="flex-1 flex items-center justify-center p-8 md:p-16 bg-slate-50">
+        <div className="w-full max-w-md space-y-10">
           <div className="space-y-2">
-            <h1 className="text-4xl font-black text-slate-800">{isRegistering ? 'Registro' : 'Ingresar'}</h1>
-            <p className="text-slate-500 font-bold">Plataforma Feria Escolar 2026</p>
+            <h1 className="text-4xl font-black text-slate-800 tracking-tight">¡Bienvenido!</h1>
+            <p className="text-slate-500 font-bold">Ingresa tus datos para continuar.</p>
           </div>
 
-          <div className="flex p-1.5 bg-slate-200/50 rounded-2xl">
+          <div className="flex p-1.5 bg-slate-200/50 rounded-2xl border border-slate-200">
             <button
-              onClick={() => { setAuthMode('student'); setIsRegistering(false); }}
-              className={cn("flex-1 py-4 rounded-xl font-black text-xs", authMode === 'student' ? "bg-white text-[#1a237e] shadow-lg" : "text-slate-400")}
+              onClick={() => { setAuthMode('student'); setError(null); }}
+              className={cn(
+                "flex-1 flex items-center justify-center gap-2 py-4 rounded-xl font-black transition-all text-xs",
+                authMode === 'student' ? "bg-white text-[#1a237e] shadow-lg" : "text-slate-400 hover:text-slate-600"
+              )}
             >Alumno</button>
             <button
-              onClick={() => setAuthMode('admin')}
-              className={cn("flex-1 py-4 rounded-xl font-black text-xs", authMode === 'admin' ? "bg-white text-[#1a237e] shadow-lg" : "text-slate-400")}
+              onClick={() => { setAuthMode('admin'); setError(null); }}
+              className={cn(
+                "flex-1 flex items-center justify-center gap-2 py-4 rounded-xl font-black transition-all text-xs",
+                authMode === 'admin' ? "bg-white text-[#1a237e] shadow-lg" : "text-slate-400 hover:text-slate-600"
+              )}
             >Docente</button>
           </div>
 
           <form onSubmit={handleAuth} className="space-y-6">
-            <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">
+                {authMode === 'student' ? 'DNI del Alumno' : 'Correo Institucional'}
+              </label>
               <input 
                 type={authMode === 'student' ? "text" : "email"}
                 required
-                placeholder={authMode === 'student' ? "DNI" : "correo@ejemplo.com"}
+                placeholder={authMode === 'student' ? "Tu DNI" : "correo@ejemplo.com"}
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
-                className="w-full px-6 py-5 bg-white rounded-2xl border-2 border-slate-100 outline-none focus:border-[#1a237e] font-bold"
+                className="w-full px-6 py-5 bg-white rounded-2xl border-2 border-slate-100 outline-none focus:border-[#1a237e] transition-all font-bold placeholder:text-slate-300"
               />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Contraseña</label>
               <input 
                 type="password" 
                 required
-                placeholder="Contraseña"
+                placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-6 py-5 bg-white rounded-2xl border-2 border-slate-100 outline-none focus:border-[#1a237e] font-bold"
+                className="w-full px-6 py-5 bg-white rounded-2xl border-2 border-slate-100 outline-none focus:border-[#1a237e] transition-all font-bold placeholder:text-slate-300"
               />
             </div>
 
             {error && (
-              <div className="p-4 bg-red-50 text-red-600 rounded-xl text-xs font-bold border border-red-100 flex items-center gap-2">
-                <AlertCircle className="w-4 h-4" /> {error}
+              <div className="p-5 bg-red-50 text-red-600 rounded-2xl text-xs font-bold border border-red-100 flex items-center gap-3">
+                <AlertCircle className="w-5 h-5 shrink-0" />
+                <span>{error}</span>
               </div>
             )}
 
             <button 
               type="submit"
               disabled={loading}
-              className="w-full py-6 bg-[#1a237e] text-white rounded-2xl font-black text-lg shadow-2xl transition-all"
+              className="w-full py-6 bg-[#1a237e] text-white rounded-2xl font-black text-lg shadow-2xl transition-all flex items-center justify-center gap-3"
             >
-              {loading ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : (isRegistering ? 'Crear Cuenta' : 'Entrar')}
+              {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Ingresar'}
             </button>
           </form>
 
-          {authMode === 'admin' && (
-            <button onClick={() => setIsRegistering(!isRegistering)} className="w-full text-xs font-black text-[#1a237e] hover:underline">
-              {isRegistering ? 'Volver al login' : '¿No tienes cuenta? Regístrate aquí'}
-            </button>
-          )}
+          <p className="text-center text-[10px] font-black text-slate-300 uppercase tracking-widest">
+            © 2026 IE Virgen de los Dolores
+          </p>
         </div>
       </div>
     </div>
