@@ -112,7 +112,11 @@ export const ExamsPage: React.FC = () => {
         
         let filtered = data || [];
         if (settings.difficulty !== 'All') {
-          filtered = filtered.filter(ex => ex.dificultad === settings.difficulty);
+          filtered = filtered.filter(ex => 
+            ex.dificultad === settings.difficulty || 
+            (settings.difficulty === 'Fácil' && ex.dificultad === 'Bajo') ||
+            (settings.difficulty === 'Difícil' && ex.dificultad === 'Alto')
+          );
         }
         
         allQuestions = [...allQuestions, ...filtered.sort(() => Math.random() - 0.5).slice(0, countForArea)];
@@ -245,7 +249,7 @@ export const ExamsPage: React.FC = () => {
               Nivel de Dificultad
             </h3>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              {['All', 'Bajo', 'Medio', 'Alto'].map(d => (
+              {['All', 'Fácil', 'Medio', 'Difícil'].map(d => (
                 <button
                   key={d}
                   onClick={() => setSettings({...settings, difficulty: d as any})}
@@ -253,7 +257,7 @@ export const ExamsPage: React.FC = () => {
                     "py-4 rounded-2xl font-black transition-all border-2",
                     settings.difficulty === d 
                       ? "bg-indigo-600 text-white border-indigo-600 shadow-xl shadow-indigo-200" 
-                      : "bg-white text-slate-500 border-slate-100 hover:border-indigo-200"
+                      : "bg-white text-slate-500 border-slate-100 hover:border-blue-200"
                   )}
                 >
                   {d === 'All' ? 'Todos' : d}
