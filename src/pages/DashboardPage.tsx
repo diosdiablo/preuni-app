@@ -11,7 +11,8 @@ import {
   History,
   Loader2,
   Zap,
-  Star
+  Star,
+  GraduationCap
 } from 'lucide-react';
 import { 
   XAxis, 
@@ -99,7 +100,7 @@ export const DashboardPage: React.FC = () => {
     return { label: 'Avanzado', color: 'text-emerald-600 bg-emerald-50 border-emerald-100' };
   };
 
-  const userName = authProfile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'Estudiante';
+  const userName = user?.email?.split('@')[0] || 'Estudiante';
 
   return (
     <div className="space-y-10 pb-12">
