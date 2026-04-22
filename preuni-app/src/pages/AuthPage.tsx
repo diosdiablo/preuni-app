@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { GraduationCap, ShieldCheck, User, Lock, AlertCircle, Loader2, Mail, Sparkles, UserPlus } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { GraduationCap, ShieldCheck, User, Lock, Loader2, Mail, Sparkles, UserPlus } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 export const AuthPage: React.FC = () => {
