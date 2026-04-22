@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { GraduationCap, ShieldCheck, User, Lock, AlertCircle, Loader2, Mail, Sparkles } from 'lucide-react';
+import { GraduationCap, ShieldCheck, User, Lock, AlertCircle, Loader2, Mail, Sparkles, UserPlus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 export const AuthPage: React.FC = () => {
   const [authMode, setAuthMode] = useState<'student' | 'admin'>('student');
+  const [isRegistering, setIsRegistering] = useState(false);
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -35,26 +36,37 @@ export const AuthPage: React.FC = () => {
         }
       }
 
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password: finalPassword,
-      });
-
-      if (signInError && signInError.message === 'Invalid login credentials' && authMode === 'student') {
+      if (isRegistering) {
         const { error: signUpError } = await supabase.auth.signUp({
           email,
           password: finalPassword,
-          options: { data: { dni: identifier } }
+          options: { data: { dni: authMode === 'student' ? identifier : null } }
         });
         if (signUpError) throw signUpError;
-        
-        const { error: retryError } = await supabase.auth.signInWithPassword({
+        alert('Registro completado. ¡Ya puedes ingresar!');
+        setIsRegistering(false);
+      } else {
+        const { error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password: finalPassword,
         });
-        if (retryError) throw retryError;
-      } else if (signInError) {
-        throw signInError;
+
+        if (signInError && signInError.message === 'Invalid login credentials' && authMode === 'student') {
+          const { error: signUpError } = await supabase.auth.signUp({
+            email,
+            password: finalPassword,
+            options: { data: { dni: identifier } }
+          });
+          if (signUpError) throw signUpError;
+          
+          const { error: retryError } = await supabase.auth.signInWithPassword({
+            email,
+            password: finalPassword,
+          });
+          if (retryError) throw retryError;
+        } else if (signInError) {
+          throw signInError;
+        }
       }
 
     } catch (err: any) {
@@ -67,9 +79,7 @@ export const AuthPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-white flex flex-col md:flex-row font-sans overflow-hidden">
       
-      {/* LADO IZQUIERDO: Mensaje Bonito e Institucional */}
       <div className="hidden md:flex md:w-1/2 bg-[#1a237e] relative items-center justify-center p-16 text-white overflow-hidden">
-        {/* Decoración de fondo */}
         <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-blue-500/20 rounded-full blur-[120px]" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-indigo-600/20 rounded-full blur-[120px]" />
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10" />
@@ -119,14 +129,12 @@ export const AuthPage: React.FC = () => {
         </div>
       </div>
 
-      {/* LADO DERECHO: Formulario de Acceso */}
       <div className="flex-1 flex items-center justify-center p-8 md:p-16 bg-slate-50">
         <motion.div 
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           className="w-full max-w-md space-y-10"
         >
-          {/* Logo móvil */}
           <div className="md:hidden text-center space-y-4 mb-8">
              <div className="inline-flex p-4 bg-[#1a237e] text-white rounded-2xl shadow-xl">
                 <GraduationCap className="w-8 h-8" />
@@ -135,21 +143,24 @@ export const AuthPage: React.FC = () => {
           </div>
 
           <div className="space-y-2">
-            <h1 className="text-4xl font-black text-slate-800 tracking-tight">¡Bienvenido!</h1>
-            <p className="text-slate-500 font-bold">Ingresa tus datos para continuar.</p>
+            <h1 className="text-4xl font-black text-slate-800 tracking-tight">
+              {isRegistering ? 'Crear Cuenta' : '¡Bienvenido!'}
+            </h1>
+            <p className="text-slate-500 font-bold">
+              {isRegistering ? 'Regístrate como docente administrador.' : 'Ingresa tus datos para continuar.'}
+            </p>
           </div>
 
-          {/* Tabs Selector */}
           <div className="flex p-1.5 bg-slate-200/50 rounded-2xl border border-slate-200">
             <button
-              onClick={() => { setAuthMode('student'); setError(null); }}
+              onClick={() => { setAuthMode('student'); setError(null); setIsRegistering(false); }}
               className={cn(
                 "flex-1 flex items-center justify-center gap-2 py-4 rounded-xl font-black transition-all text-xs",
                 authMode === 'student' ? "bg-white text-[#1a237e] shadow-lg" : "text-slate-400 hover:text-slate-600"
               )}
             >
               <User className="w-4 h-4" />
-              Alumno (DNI)
+              Alumno
             </button>
             <button
               onClick={() => { setAuthMode('admin'); setError(null); }}
@@ -198,30 +209,35 @@ export const AuthPage: React.FC = () => {
               </div>
             </div>
 
-            <AnimatePresence>
-              {error && (
-                <motion.div 
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="p-5 bg-red-50 text-red-600 rounded-2xl text-xs font-bold flex items-center gap-3 border border-red-100"
-                >
-                  <AlertCircle className="w-5 h-5 shrink-0" />
-                  {error}
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {error && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-4 bg-red-50 text-red-600 rounded-xl text-xs font-bold border border-red-100">
+                {error}
+              </motion.div>
+            )}
 
             <button 
               type="submit"
               disabled={loading}
               className="w-full py-6 bg-[#1a237e] text-white rounded-2xl font-black text-lg shadow-2xl shadow-blue-900/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
             >
-              {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Ingresar a la Plataforma'}
+              {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : (isRegistering ? 'Crear mi Cuenta' : 'Ingresar a la Plataforma')}
             </button>
           </form>
 
+          {authMode === 'admin' && (
+            <div className="text-center">
+              <button 
+                onClick={() => setIsRegistering(!isRegistering)}
+                className="text-xs font-black text-[#1a237e] hover:underline flex items-center justify-center gap-2 mx-auto"
+              >
+                <UserPlus className="w-4 h-4" />
+                {isRegistering ? 'Ya tengo cuenta, quiero ingresar' : 'No tengo cuenta, quiero registrarme'}
+              </button>
+            </div>
+          )}
+
           <p className="text-center text-[10px] font-black text-slate-300 uppercase tracking-widest">
-            © 2026 IE Virgen de los Dolores - Todos los derechos reservados
+            © 2026 IE Virgen de los Dolores
           </p>
         </motion.div>
       </div>
