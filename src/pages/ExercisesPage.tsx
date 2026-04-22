@@ -63,7 +63,7 @@ export const ExercisesPage: React.FC = () => {
     let query = supabase.from('exercises').select('*');
 
     if (selectedArea !== 'All') {
-      query = query.eq('area', selectedArea);
+      query = query.or(`area.eq."${selectedArea}",subarea.eq."${selectedArea}"`);
     }
     if (selectedDifficulty !== 'All') {
       query = query.eq('dificultad', selectedDifficulty);
