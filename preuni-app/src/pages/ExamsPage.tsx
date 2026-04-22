@@ -382,6 +382,15 @@ export const ExamsPage: React.FC = () => {
               <h2 className="text-3xl font-bold text-slate-800 leading-tight">
                 {question.enunciado}
               </h2>
+              {question.image_url && (
+                <div className="w-full bg-white border border-slate-100 rounded-[2rem] p-4 shadow-inner">
+                  <img 
+                    src={question.image_url} 
+                    alt="Ejercicio" 
+                    className="w-full h-auto max-h-[450px] object-contain rounded-xl"
+                  />
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-1 gap-4">

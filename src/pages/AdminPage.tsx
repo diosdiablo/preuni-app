@@ -42,7 +42,8 @@ export const AdminPage: React.FC = () => {
     enunciado: '',
     opciones: ['', '', '', ''],
     respuesta_correcta: 0,
-    explicacion: ''
+    explicacion: '',
+    image_url: ''
   });
 
   // Bulk state
@@ -93,6 +94,32 @@ export const AdminPage: React.FC = () => {
     const { error } = await supabase.from('authorized_students').delete().eq('dni', dni);
     if (error) alert(error.message);
     else fetchStudents();
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('exercises')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('exercises')
+        .getPublicUrl(filePath);
+
+      setFormData({ ...formData, image_url: publicUrl });
+      alert('Imagen subida correctamente');
+    } catch (err: any) {
+      alert('Error subiendo imagen: ' + err.message);
+    }
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -461,6 +488,48 @@ export const AdminPage: React.FC = () => {
                   onChange={(e) => setFormData({...formData, enunciado: e.target.value})}
                   className="w-full px-8 py-6 rounded-[2.5rem] border-2 border-slate-50 bg-slate-50 outline-none focus:bg-white focus:border-blue-600 transition-all font-medium text-lg"
                 />
+              </div>
+
+              <div className="space-y-4">
+                <label className="text-sm font-black text-slate-400 uppercase tracking-widest pl-2">Imagen del Ejercicio (Opcional)</label>
+                <div className="flex flex-col gap-4">
+                  <input 
+                    type="file" 
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    id="image-upload"
+                  />
+                  <label 
+                    htmlFor="image-upload"
+                    className="flex flex-col items-center justify-center gap-4 p-10 border-4 border-dashed border-slate-100 rounded-[2.5rem] bg-slate-50 hover:bg-white hover:border-blue-100 transition-all cursor-pointer group"
+                  >
+                    {formData.image_url ? (
+                      <div className="relative w-full aspect-video">
+                        <img src={formData.image_url} alt="Preview" className="w-full h-full object-contain rounded-2xl" />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all rounded-2xl">
+                          <span className="text-white font-black">Cambiar Imagen</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="p-4 bg-white rounded-2xl shadow-sm text-slate-400">
+                          <UploadCloud className="w-10 h-10" />
+                        </div>
+                        <p className="font-bold text-slate-400">Haz clic para subir la captura del ejercicio</p>
+                      </>
+                    )}
+                  </label>
+                  {formData.image_url && (
+                    <button 
+                      type="button"
+                      onClick={() => setFormData({...formData, image_url: ''})}
+                      className="text-rose-500 font-bold text-sm hover:underline"
+                    >
+                      Quitar imagen
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className="space-y-6">

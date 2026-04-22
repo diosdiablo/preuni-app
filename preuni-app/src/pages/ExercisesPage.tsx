@@ -328,6 +328,16 @@ export const ExercisesPage: React.FC = () => {
                   {activeExercise.enunciado}
                 </h2>
 
+                {activeExercise.image_url && (
+                  <div className="w-full bg-slate-50 border border-slate-100 rounded-[2.5rem] p-6">
+                    <img 
+                      src={activeExercise.image_url} 
+                      alt="Ejercicio" 
+                      className="w-full h-auto max-h-[400px] object-contain rounded-2xl shadow-sm"
+                    />
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 gap-4">
                   {activeExercise.opciones.map((option, idx) => (
                     <button

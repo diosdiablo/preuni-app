@@ -16,6 +16,7 @@ export interface Exercise {
   opciones: string[];
   respuesta_correcta: number;
   explicacion: string;
+  image_url?: string;
 }
 
 export interface Profile {
