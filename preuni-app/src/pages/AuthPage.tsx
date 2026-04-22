@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 
 export const AuthPage: React.FC = () => {
   const [authMode, setAuthMode] = useState<'student' | 'admin'>('student');
-  const [identifier, setIdentifier] = useState(''); // DNI or Email
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -21,11 +21,9 @@ export const AuthPage: React.FC = () => {
       let finalPassword = password;
 
       if (authMode === 'student') {
-        // Student logic: DNI to Email
         email = `${identifier}@virdolores.edu`;
-        finalPassword = password || identifier; // Password is DNI by default
+        finalPassword = password || identifier;
 
-        // Check if DNI is authorized
         const { data: isAuthorized } = await supabase
           .from('authorized_students')
           .select('dni')
@@ -33,17 +31,15 @@ export const AuthPage: React.FC = () => {
           .single();
 
         if (!isAuthorized) {
-          throw new Error('Tu DNI no está en la lista de alumnos autorizados. Contacta a tu profesor.');
+          throw new Error('DNI no autorizado. Contacta con el administrador.');
         }
       }
 
-      // Try to Sign In
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password: finalPassword,
       });
 
-      // If student account doesn't exist yet, auto-register
       if (signInError && signInError.message === 'Invalid login credentials' && authMode === 'student') {
         const { error: signUpError } = await supabase.auth.signUp({
           email,
@@ -69,126 +65,112 @@ export const AuthPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0e27] flex items-center justify-center p-6 relative overflow-hidden font-sans">
-      {/* Premium Background Effects */}
-      <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-blue-900/30 rounded-full blur-[150px]" />
-      <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-indigo-900/30 rounded-full blur-[150px]" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5" />
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 relative overflow-hidden font-sans">
+      {/* Subtle Background Decoration */}
+      <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-blue-50/50 rounded-full blur-[120px] -z-10" />
+      <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-indigo-50/50 rounded-full blur-[120px] -z-10" />
 
       <motion.div 
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-xl relative z-10"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-md"
       >
-        <div className="glass-effect bg-white/10 backdrop-blur-3xl rounded-[3.5rem] border border-white/10 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)] overflow-hidden">
-          
-          <div className="p-10 md:p-14 space-y-10">
-            {/* Header section */}
-            <div className="text-center space-y-6">
-              <div className="relative inline-block">
-                <div className="absolute inset-0 bg-blue-500 blur-2xl opacity-20 animate-pulse" />
-                <div className="relative p-6 bg-white/5 rounded-3xl border border-white/10 shadow-2xl text-white">
-                  <GraduationCap className="w-12 h-12" />
+        <div className="bg-white rounded-[3rem] shadow-2xl p-10 md:p-12 space-y-10 border border-slate-100">
+          <div className="text-center space-y-4">
+            <div className="inline-flex p-5 bg-[#1a237e]/5 rounded-3xl text-[#1a237e] mb-2">
+               <GraduationCap className="w-12 h-12" />
+            </div>
+            <div className="space-y-1">
+              <h1 className="text-3xl font-black text-slate-800 tracking-tight">
+                IE Virgen de <br/> los Dolores
+              </h1>
+              <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Feria Escolar 2026</p>
+            </div>
+          </div>
+
+          {/* Selector de Modo */}
+          <div className="flex p-1 bg-slate-100 rounded-2xl">
+            <button
+              onClick={() => { setAuthMode('student'); setError(null); }}
+              className={cn(
+                "flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl font-black transition-all text-xs",
+                authMode === 'student' ? "bg-white text-[#1a237e] shadow-sm" : "text-slate-400 hover:text-slate-600"
+              )}
+            >
+              <User className="w-4 h-4" />
+              Alumno
+            </button>
+            <button
+              onClick={() => { setAuthMode('admin'); setError(null); }}
+              className={cn(
+                "flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl font-black transition-all text-xs",
+                authMode === 'admin' ? "bg-white text-[#1a237e] shadow-sm" : "text-slate-400 hover:text-slate-600"
+              )}
+            >
+              <ShieldCheck className="w-4 h-4" />
+              Admin
+            </button>
+          </div>
+
+          <form onSubmit={handleAuth} className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">
+                {authMode === 'student' ? 'Número de DNI' : 'Correo Admin'}
+              </label>
+              <div className="relative group">
+                <div className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-[#1a237e] transition-colors">
+                  {authMode === 'student' ? <User className="w-5 h-5" /> : <Mail className="w-5 h-5" />}
                 </div>
-              </div>
-              <div className="space-y-2">
-                <h1 className="text-4xl font-black text-white tracking-tight leading-tight">
-                  IE Virgen de <br/> los Dolores
-                </h1>
-                <p className="text-blue-300/60 font-bold uppercase tracking-[0.2em] text-[10px]">Sistema Institucional de Apoyo al Estudiante</p>
+                <input 
+                  type={authMode === 'student' ? "text" : "email"}
+                  required
+                  placeholder={authMode === 'student' ? "DNI de 8 dígitos" : "correo@ejemplo.com"}
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
+                  className="w-full pl-14 pr-6 py-4.5 bg-slate-50 rounded-2xl border-2 border-transparent outline-none focus:bg-white focus:border-[#1a237e] transition-all font-bold placeholder:text-slate-300"
+                />
               </div>
             </div>
 
-            {/* Auth Mode Tabs */}
-            <div className="flex p-1.5 bg-black/20 rounded-2xl border border-white/5">
-              <button
-                onClick={() => { setAuthMode('student'); setError(null); setIdentifier(''); setPassword(''); }}
-                className={cn(
-                  "flex-1 flex items-center justify-center gap-2 py-4 rounded-xl font-black transition-all text-sm",
-                  authMode === 'student' ? "bg-white text-[#1a237e] shadow-lg" : "text-white/40 hover:text-white"
-                )}
-              >
-                <User className="w-4 h-4" />
-                Estudiante (DNI)
-              </button>
-              <button
-                onClick={() => { setAuthMode('admin'); setError(null); setIdentifier(''); setPassword(''); }}
-                className={cn(
-                  "flex-1 flex items-center justify-center gap-2 py-4 rounded-xl font-black transition-all text-sm",
-                  authMode === 'admin' ? "bg-white text-[#1a237e] shadow-lg" : "text-white/40 hover:text-white"
-                )}
-              >
-                <ShieldCheck className="w-4 h-4" />
-                Docente (Email)
-              </button>
-            </div>
-
-            <form onSubmit={handleAuth} className="space-y-8">
-              <div className="space-y-6">
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] ml-4">
-                    {authMode === 'student' ? 'Número de DNI' : 'Correo Electrónico'}
-                  </label>
-                  <div className="relative group">
-                    <div className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-white transition-colors">
-                      {authMode === 'student' ? <User className="w-5 h-5" /> : <Mail className="w-5 h-5" />}
-                    </div>
-                    <input 
-                      type={authMode === 'student' ? "text" : "email"}
-                      required
-                      placeholder={authMode === 'student' ? "Ej: 71234567" : "admin@ejemplo.com"}
-                      value={identifier}
-                      onChange={(e) => setIdentifier(e.target.value)}
-                      className="w-full pl-16 pr-6 py-5 bg-white/5 rounded-2xl border border-white/10 outline-none focus:bg-white/10 focus:border-white/30 text-white font-bold transition-all placeholder:text-white/10"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] ml-4">Contraseña</label>
-                  <div className="relative group">
-                    <Lock className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-white/20 group-focus-within:text-white transition-colors" />
-                    <input 
-                      type="password" 
-                      required
-                      placeholder={authMode === 'student' ? "Tu DNI es tu contraseña" : "••••••••"}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="w-full pl-16 pr-6 py-5 bg-white/5 rounded-2xl border border-white/10 outline-none focus:bg-white/10 focus:border-white/30 text-white font-bold transition-all placeholder:text-white/10"
-                    />
-                  </div>
-                </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Contraseña</label>
+              <div className="relative group">
+                <Lock className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-[#1a237e] transition-colors" />
+                <input 
+                  type="password" 
+                  required
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full pl-14 pr-6 py-4.5 bg-slate-50 rounded-2xl border-2 border-transparent outline-none focus:bg-white focus:border-[#1a237e] transition-all font-bold placeholder:text-slate-300"
+                />
               </div>
-
-              <AnimatePresence>
-                {error && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="p-5 bg-rose-500/10 border border-rose-500/20 text-rose-200 rounded-2xl text-xs font-bold flex items-center gap-3"
-                  >
-                    <AlertCircle className="w-5 h-5 shrink-0" />
-                    {error}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              <button 
-                type="submit"
-                disabled={loading}
-                className="w-full py-6 bg-white text-[#1a237e] rounded-2xl font-black text-lg shadow-[0_20px_40px_-10px_rgba(255,255,255,0.1)] hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
-              >
-                {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Ingresar al Portal'}
-              </button>
-            </form>
-
-            <div className="pt-4 flex justify-center">
-               <div className="inline-flex items-center gap-3 px-6 py-3 bg-white/5 rounded-full border border-white/5">
-                  <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                  <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Servidor Institucional Activo</span>
-               </div>
             </div>
+
+            <AnimatePresence>
+              {error && (
+                <motion.div 
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-4 bg-red-50 text-red-600 rounded-2xl text-xs font-bold flex items-center gap-3 border border-red-100"
+                >
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  {error}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <button 
+              type="submit"
+              disabled={loading}
+              className="w-full py-5 bg-[#1a237e] text-white rounded-2xl font-black text-lg shadow-xl shadow-[#1a237e]/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+            >
+              {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Ingresar'}
+            </button>
+          </form>
+
+          <div className="text-center">
+             <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Acceso Protegido IE Virgen de los Dolores</span>
           </div>
         </div>
       </motion.div>
