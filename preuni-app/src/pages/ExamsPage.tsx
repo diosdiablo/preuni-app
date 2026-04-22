@@ -108,7 +108,7 @@ export const ExamsPage: React.FC = () => {
         const { data } = await supabase
           .from('exercises')
           .select('*')
-          .eq('area', area);
+          .or(`area.eq."${area}",subarea.eq."${area}"`);
         
         let filtered = data || [];
         if (settings.difficulty !== 'All') {
