@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { GraduationCap, ShieldCheck, User, AlertCircle, Loader2, UserPlus } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { GraduationCap, AlertCircle, Loader2 } from 'lucide-react';
+
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
