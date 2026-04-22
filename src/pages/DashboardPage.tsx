@@ -54,15 +54,15 @@ export const DashboardPage: React.FC = () => {
       setExams(examsData || []);
 
       const areaColors: Record<string, string> = {
-        'Matemáticas': '#3b82f6',
-        'Comunicación': '#ec4899',
-        'Biología': '#10b981',
-        'Física': '#f59e0b',
-        'Química': '#06b6d4',
-        'Ciencias Sociales': '#8b5cf6',
-        'Inglés': '#6366f1',
-        'Razonamiento Matemático': '#14b8a6',
-        'Razonamiento Verbal': '#ef4444'
+        'Matemáticas': '#1a237e',
+        'Comunicación': '#c62828',
+        'Biología': '#2e7d32',
+        'Física': '#ef6c00',
+        'Química': '#00838f',
+        'Ciencias Sociales': '#4527a0',
+        'Inglés': '#1565c0',
+        'Razonamiento Matemático': '#00695c',
+        'Razonamiento Verbal': '#d84315'
       };
 
       const areas: Area[] = ['Matemáticas', 'Comunicación', 'Biología', 'Física', 'Química', 'Ciencias Sociales', 'Inglés', 'Razonamiento Matemático', 'Razonamiento Verbal'];
@@ -70,7 +70,7 @@ export const DashboardPage: React.FC = () => {
         area: area.split(' ')[0],
         full: area,
         value: 40 + Math.floor(Math.random() * 50),
-        color: areaColors[area] || '#64748b'
+        color: areaColors[area] || '#1a237e'
       }));
       setStats(areaStats);
 
@@ -85,8 +85,8 @@ export const DashboardPage: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center py-32">
         <div className="relative">
-          <Loader2 className="w-16 h-16 text-blue-600 animate-spin" />
-          <Brain className="w-8 h-8 text-blue-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+          <Loader2 className="w-16 h-16 text-[#1a237e] animate-spin" />
+          <Brain className="w-8 h-8 text-[#1a237e]/40 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
         </div>
         <p className="mt-6 text-slate-500 font-bold animate-pulse">Optimizando tu ruta de aprendizaje...</p>
       </div>
@@ -99,34 +99,38 @@ export const DashboardPage: React.FC = () => {
     return { label: 'Avanzado', color: 'text-emerald-600 bg-emerald-50 border-emerald-100' };
   };
 
-  const userName = authProfile?.email?.split('@')[0] || user?.email?.split('@')[0] || 'Estudiante';
+  const userName = authProfile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'Estudiante';
 
   return (
     <div className="space-y-10 pb-12">
-      {/* Hero Section Vibrant */}
+      {/* Hero Section Vibrant - Institucional */}
       <motion.div 
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="relative overflow-hidden bg-gradient-to-br from-indigo-700 via-blue-600 to-blue-500 p-10 md:p-14 rounded-[3.5rem] text-white shadow-2xl shadow-blue-300/40"
+        className="relative overflow-hidden bg-gradient-to-br from-[#1a237e] via-[#283593] to-[#3949ab] p-10 md:p-14 rounded-[3.5rem] text-white shadow-2xl shadow-blue-900/20"
       >
+        {/* Abstract shapes for premium look */}
+        <div className="absolute top-[-20%] right-[-10%] w-96 h-96 bg-white/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-[-20%] left-[-10%] w-96 h-96 bg-blue-400/10 rounded-full blur-3xl" />
+
         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-6">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-md rounded-full border border-white/30 text-sm font-bold animate-pulse">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full border border-white/20 text-sm font-bold">
               <Zap className="w-4 h-4 fill-yellow-300 text-yellow-300" />
-              Racha de 5 días activos
+              Portal de Apoyo al Estudiante
             </div>
             <h1 className="text-5xl md:text-6xl font-black tracking-tight leading-tight">
               ¡Hola, {userName}! 🚀
             </h1>
             <p className="text-xl md:text-2xl opacity-90 font-medium max-w-lg">
-              Tu nivel actual es <span className="p-1 px-3 bg-white text-blue-700 rounded-xl font-black">{authProfile?.level || 'Principiante'}</span>
+              Sigue preparándote para alcanzar la <span className="p-1 px-3 bg-white text-[#1a237e] rounded-xl font-black">Excelencia</span>
             </p>
             <div className="flex flex-wrap gap-5 pt-4">
-              <Link to="/examenes" className="px-8 py-4 bg-white text-blue-700 rounded-[1.5rem] font-black shadow-xl hover:scale-105 transition-all flex items-center gap-3">
+              <Link to="/examenes" className="px-8 py-4 bg-white text-[#1a237e] rounded-[1.5rem] font-black shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-3">
                 <Target className="w-5 h-5" />
                 Iniciar Simulacro
               </Link>
-              <div className="flex items-center gap-2 px-6 py-4 bg-blue-400/30 backdrop-blur-md rounded-[1.5rem] border border-blue-300/40">
+              <div className="flex items-center gap-2 px-6 py-4 bg-white/10 backdrop-blur-md rounded-[1.5rem] border border-white/10">
                 <Star className="w-5 h-5 text-yellow-300 fill-yellow-300" />
                 <span className="font-black text-2xl">{authProfile?.points || 0}</span>
                 <span className="font-bold opacity-70">XP</span>
@@ -137,9 +141,9 @@ export const DashboardPage: React.FC = () => {
              <motion.div 
                animate={{ y: [0, -15, 0] }}
                transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-               className="w-64 h-64 bg-white/10 rounded-[3rem] flex items-center justify-center border-8 border-white/10 backdrop-blur-md"
+               className="w-64 h-64 bg-white/5 rounded-[3rem] flex items-center justify-center border-8 border-white/5 backdrop-blur-md"
              >
-                <Brain className="w-32 h-32 text-white/40" />
+                <GraduationCap className="w-32 h-32 text-white/20" />
              </motion.div>
           </div>
         </div>
@@ -149,7 +153,7 @@ export const DashboardPage: React.FC = () => {
         <div className="xl:col-span-2 card-premium p-10">
           <div className="flex items-center justify-between mb-10">
             <div className="flex items-center gap-4">
-              <div className="p-4 bg-blue-50 text-blue-600 rounded-[1.5rem]">
+              <div className="p-4 bg-slate-50 text-[#1a237e] rounded-[1.5rem] border border-slate-100">
                 <TrendingUp className="w-7 h-7" />
               </div>
               <h2 className="text-3xl font-black text-slate-800 tracking-tight">Dominio por Área</h2>
@@ -163,9 +167,9 @@ export const DashboardPage: React.FC = () => {
                 <Radar
                   name="Dominio"
                   dataKey="value"
-                  stroke="#2563eb"
-                  fill="#3b82f6"
-                  fillOpacity={0.5}
+                  stroke="#1a237e"
+                  fill="#1a237e"
+                  fillOpacity={0.4}
                 />
                 <Tooltip 
                   contentStyle={{ borderRadius: '24px', border: 'none', padding: '15px', boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.15)' }}
@@ -178,13 +182,13 @@ export const DashboardPage: React.FC = () => {
         <div className="card-premium p-10 flex flex-col">
           <div className="flex items-center gap-3 mb-8">
             <Flame className="w-6 h-6 text-orange-500 fill-orange-500" />
-            <h3 className="text-2xl font-black text-slate-800">Mastery Path</h3>
+            <h3 className="text-2xl font-black text-slate-800">Camino al Éxito</h3>
           </div>
           <div className="flex-1 space-y-5">
             {[...stats].sort((a,b) => b.value - a.value).map((s) => {
               const level = getMasteryLevel(s.value);
               return (
-                <div key={s.area} className="group p-5 rounded-[2rem] bg-slate-50 border border-slate-100/50 hover:bg-white hover:border-blue-100 hover:shadow-xl transition-all">
+                <div key={s.area} className="group p-5 rounded-[2rem] bg-slate-50 border border-slate-100/50 hover:bg-white hover:border-[#1a237e]/20 hover:shadow-xl transition-all">
                   <div className="flex items-center justify-between mb-3">
                     <span className="font-black text-slate-700">{s.area}</span>
                     <span className={cn("text-[10px] font-black px-3 py-1 rounded-full uppercase border", level.color)}>
@@ -196,7 +200,7 @@ export const DashboardPage: React.FC = () => {
                       <motion.div 
                         initial={{ width: 0 }}
                         animate={{ width: `${s.value}%` }}
-                        className="h-full rounded-full transition-all duration-1000" 
+                        className="h-full rounded-full transition-all duration-1000 shadow-sm" 
                         style={{ backgroundColor: s.color }}
                       />
                     </div>
@@ -212,7 +216,7 @@ export const DashboardPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
         <div className="lg:col-span-3 card-premium p-10">
           <div className="flex items-center gap-4 mb-10">
-             <div className="p-4 bg-indigo-50 text-indigo-600 rounded-[1.5rem]">
+             <div className="p-4 bg-slate-50 text-[#1a237e] rounded-[1.5rem] border border-slate-100">
                <Calendar className="w-7 h-7" />
              </div>
              <h2 className="text-3xl font-black text-slate-800 tracking-tight">Evolución Semanal</h2>
@@ -234,9 +238,9 @@ export const DashboardPage: React.FC = () => {
                 <Line 
                   type="monotone" 
                   dataKey="score" 
-                  stroke="#3b82f6" 
+                  stroke="#1a237e" 
                   strokeWidth={6} 
-                  dot={{ r: 8, fill: '#3b82f6', strokeWidth: 4, stroke: '#fff' }}
+                  dot={{ r: 8, fill: '#1a237e', strokeWidth: 4, stroke: '#fff' }}
                   activeDot={{ r: 10, strokeWidth: 0 }}
                 />
               </LineChart>
@@ -246,16 +250,16 @@ export const DashboardPage: React.FC = () => {
 
         <div className="lg:col-span-2 card-premium p-10 flex flex-col">
           <div className="flex items-center gap-4 mb-10">
-             <div className="p-4 bg-slate-50 text-slate-600 rounded-[1.5rem]">
+             <div className="p-4 bg-slate-50 text-slate-600 rounded-[1.5rem] border border-slate-100">
                <History className="w-7 h-7" />
              </div>
-             <h2 className="text-3xl font-black text-slate-800 tracking-tight">Actividad</h2>
+             <h2 className="text-3xl font-black text-slate-800 tracking-tight">Última Actividad</h2>
           </div>
           <div className="flex-1 space-y-4 overflow-y-auto max-h-[350px] pr-2 custom-scrollbar">
             {exams.length > 0 ? exams.map((exam) => (
               <div key={exam.id} className="flex items-center justify-between p-5 rounded-[2rem] bg-slate-50 border border-slate-100 hover:scale-[1.02] transition-all">
                 <div className="flex items-center gap-5">
-                  <div className="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center font-black text-blue-600 text-lg border-2 border-blue-50">
+                  <div className="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center font-black text-[#1a237e] text-lg border-2 border-slate-50">
                     {exam.total_questions > 0 ? Math.round((exam.score / exam.total_questions) * 100) : 0}%
                   </div>
                   <div>
