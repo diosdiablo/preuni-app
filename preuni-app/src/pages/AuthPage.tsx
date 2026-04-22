@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { GraduationCap, ShieldCheck, User, Lock, AlertCircle, Loader2, Mail, Sparkles, UserPlus } from 'lucide-react';
+import { GraduationCap, ShieldCheck, User, AlertCircle, Loader2, UserPlus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
@@ -39,7 +39,7 @@ export const AuthPage: React.FC = () => {
       }
 
       if (isRegistering) {
-        const { data, error: signUpError } = await supabase.auth.signUp({
+        const { error: signUpError } = await supabase.auth.signUp({
           email,
           password: finalPassword,
         });
@@ -47,7 +47,7 @@ export const AuthPage: React.FC = () => {
         alert('¡Cuenta creada con éxito! Ahora intenta ingresar.');
         setIsRegistering(false);
       } else {
-        const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        const { error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password: finalPassword,
         });
