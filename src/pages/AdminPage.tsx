@@ -36,7 +36,7 @@ export const AdminPage: React.FC = () => {
   // Exercise Form state
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<Exercise>>({
-    area: 'Matemáticas',
+    area: 'Ciencia',
     subarea: '',
     dificultad: 'Medio',
     enunciado: '',
@@ -116,7 +116,7 @@ export const AdminPage: React.FC = () => {
       }
       
       setFormData({
-        area: 'Matemáticas',
+        area: 'Ciencia',
         subarea: '',
         dificultad: 'Medio',
         enunciado: '',
@@ -152,13 +152,13 @@ export const AdminPage: React.FC = () => {
   const copyTemplate = () => {
     const template = `[
   {
-    "area": "Matemáticas",
-    "subarea": "Álgebra",
+    "area": "Ciencia",
+    "subarea": "Química",
     "dificultad": "Medio",
-    "enunciado": "Si x + 2 = 5, ¿cuánto vale x?",
-    "opciones": ["1", "2", "3", "4"],
-    "respuesta_correcta": 2,
-    "explicacion": "Restamos 2 de ambos lados: 5 - 2 = 3."
+    "enunciado": "La radiactividad es la emisión espontánea de radiaciones de núcleos de átomos...",
+    "opciones": ["Inestables", "Estables", "Neutros", "Gases"],
+    "respuesta_correcta": 0,
+    "explicacion": "La radiactividad proviene de núcleos inestables."
   }
 ]`;
     navigator.clipboard.writeText(template);
@@ -237,7 +237,7 @@ export const AdminPage: React.FC = () => {
             setActiveTab('create');
             setEditingId(null);
             setFormData({
-              area: 'Matemáticas',
+              area: 'Ciencia',
               subarea: '',
               dificultad: 'Medio',
               enunciado: '',
@@ -370,7 +370,7 @@ export const AdminPage: React.FC = () => {
                        <span className="px-3 py-1 bg-slate-50 text-slate-500 rounded-lg text-[10px] font-black uppercase">{ex.subarea}</span>
                        <span className={cn(
                          "px-3 py-1 rounded-lg text-[10px] font-black uppercase",
-                         ex.dificultad === 'Bajo' ? 'bg-emerald-50 text-emerald-600' :
+                         (ex.dificultad === 'Fácil' || ex.dificultad === 'Bajo') ? 'bg-emerald-50 text-emerald-600' :
                          ex.dificultad === 'Medio' ? 'bg-amber-50 text-amber-600' : 'bg-rose-50 text-rose-600'
                        )}>{ex.dificultad}</span>
                     </div>
@@ -413,7 +413,7 @@ export const AdminPage: React.FC = () => {
                     onChange={(e) => setFormData({...formData, area: e.target.value as any})}
                     className="w-full px-6 py-4 rounded-2xl border-2 border-slate-50 bg-slate-50 outline-none focus:bg-white focus:border-blue-600 transition-all font-bold"
                   >
-                    {['Matemáticas', 'Comunicación', 'Biología', 'Física', 'Química', 'Ciencias Sociales', 'Inglés', 'Razonamiento Matemático', 'Razonamiento Verbal'].map(a => (
+                    {['Matemáticas', 'Ciencia', 'Comunicación', 'Ciencias Sociales', 'Inglés'].map(a => (
                       <option key={a} value={a}>{a}</option>
                     ))}
                   </select>
@@ -432,7 +432,7 @@ export const AdminPage: React.FC = () => {
                 <div className="space-y-3">
                   <label className="text-sm font-black text-slate-400 uppercase tracking-widest pl-2">Dificultad</label>
                   <div className="flex gap-3">
-                    {['Bajo', 'Medio', 'Alto'].map(d => (
+                    {['Fácil', 'Medio', 'Difícil'].map(d => (
                       <button
                         key={d}
                         type="button"
@@ -570,12 +570,12 @@ export const AdminPage: React.FC = () => {
                 <div className="p-6 bg-black/20 rounded-2xl font-mono text-[10px] opacity-80 overflow-hidden">
                   <pre>{`[
   {
-    "area": "Matemáticas",
-    "subarea": "Álgebra",
-    "dificultad": "Medio",
-    "enunciado": "Si x + 2 = 5...",
-    "opciones": ["1", "2", "3", "4"],
-    "respuesta_correcta": 2,
+    "area": "Ciencia",
+    "subarea": "Química",
+    "dificultad": "Fácil",
+    "enunciado": "La radiactividad...",
+    "opciones": ["A", "B", "C", "D"],
+    "respuesta_correcta": 0,
     "explicacion": "..."
   }
 ]`}</pre>
