@@ -7,9 +7,10 @@ export type Area =
   | 'Ciencias Sociales' 
   | 'Inglés' 
   | 'Razonamiento Matemático' 
-  | 'Razonamiento Verbal';
+  | 'Razonamiento Verbal'
+  | 'Ciencia';
 
-export type Dificultad = 'Bajo' | 'Medio' | 'Alto';
+export type Dificultad = 'Bajo' | 'Medio' | 'Alto' | 'Fácil' | 'Difícil';
 
 export interface Exercise {
   id: string;
