@@ -101,38 +101,42 @@ export const ExamsPage: React.FC = () => {
     let allQuestions: Exercise[] = [];
 
     try {
-      // Fetch questions area by area based on distribution
-      for (const [area, percentage] of Object.entries(selectedBlock.distribution)) {
-        const countForArea = Math.ceil((settings.count * (percentage as number)) / 100);
-        
-        const { data } = await supabase
-          .from('exercises')
-          .select('*')
-          .or(`area.eq."${area}",subarea.eq."${area}"`);
-        
-        let filtered = data || [];
+      const areaList = Object.keys(selectedBlock.distribution);
+      
+      // Fetch all potential questions for the selected areas
+      const { data: allPossibleQuestions } = await supabase
+        .from('exercises')
+        .select('*');
+
+      if (!allPossibleQuestions) return;
+
+      // Filter by area/subarea and difficulty in JS for maximum reliability
+      const pool = allPossibleQuestions.filter(ex => {
+        const matchesArea = areaList.includes(ex.area) || areaList.includes(ex.subarea);
+        if (!matchesArea) return false;
+
         if (settings.difficulty !== 'All') {
-          filtered = filtered.filter(ex => 
+          return (
             ex.dificultad === settings.difficulty || 
             (settings.difficulty === 'Fácil' && ex.dificultad === 'Bajo') ||
             (settings.difficulty === 'Difícil' && ex.dificultad === 'Alto')
           );
         }
+        return true;
+      });
+
+      // Distribute questions according to block config
+      let finalSelection: Exercise[] = [];
+      for (const [area, percentage] of Object.entries(selectedBlock.distribution)) {
+        const countForArea = Math.ceil((settings.count * (percentage as number)) / 100);
+        const areaPool = pool.filter(ex => ex.area === area || ex.subarea === area)
+                            .sort(() => Math.random() - 0.5);
         
-        allQuestions = [...allQuestions, ...filtered.sort(() => Math.random() - 0.5).slice(0, countForArea)];
+        finalSelection = [...finalSelection, ...areaPool.slice(0, countForArea)];
       }
 
-      // Shuffle and trim to exact count
-      allQuestions = allQuestions.sort(() => Math.random() - 0.5).slice(0, settings.count);
-      
-      // If not enough questions, fill with random ones
-      if (allQuestions.length < settings.count) {
-        const { data: extra } = await supabase
-          .from('exercises')
-          .select('*')
-          .limit(settings.count - allQuestions.length);
-        if (extra) allQuestions = [...allQuestions, ...extra];
-      }
+      // Final shuffle and trim
+      allQuestions = finalSelection.sort(() => Math.random() - 0.5).slice(0, settings.count);
 
       setExercises(allQuestions);
       setStep('exam');
