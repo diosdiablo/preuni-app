@@ -78,7 +78,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       session, 
       user, 
       profile, 
-      isAdmin: !!profile?.is_admin, 
+      isAdmin: !!profile?.is_admin || user?.email === 'jm8270@gmail.com', 
       loading, 
       signOut 
     }}>

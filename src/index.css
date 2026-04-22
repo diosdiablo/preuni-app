@@ -1,66 +1,47 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: 'Outfit', sans-serif;
-  
-  --color-primary: #3b82f6;
-  --color-background: #f8fafc;
-  --color-foreground: #0f172a;
-  --color-card: #ffffff;
-  --color-muted: #f8fafc;
-  --color-muted-foreground: #64748b;
-  --color-border: #f1f5f9;
-
-  /* Area Specific Colors */
-  --color-math: #3b82f6;
-  --color-comms: #ec4899;
-  --color-nat-sci: #10b981;
-  --color-soc-sci: #f59e0b;
-  --color-english: #8b5cf6;
-  --color-math-reason: #06b6d4;
-  --color-verb-reason: #ef4444;
-
-  --radius-xl: 1.5rem;
-  --radius-2xl: 2rem;
-  --radius-3xl: 2.5rem;
+  --color-primary: #1a237e; /* Azul Noche Institucional */
+  --color-primary-light: #3949ab;
+  --color-primary-dark: #0d47a1;
+  --color-secondary: #ffffff;
+  --color-accent: #ffd600; /* Un toque de oro para excelencia */
 }
 
-@layer base {
-  html {
-    font-family: var(--font-sans);
-    scroll-behavior: smooth;
-  }
-  
-  body {
-    @apply bg-background text-foreground antialiased transition-colors duration-300;
-  }
-
-  * {
-    @apply border-border transition-all duration-200 ease-in-out;
-  }
-
-  .card-premium {
-    @apply bg-white border border-white/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-sm rounded-2xl hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)] hover:-translate-y-1 transition-all;
-  }
-
-  .glass-effect {
-    @apply bg-white/70 backdrop-blur-xl border border-white/20;
-  }
+:root {
+  --font-sans: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
 }
 
-/* Custom Scrollbar Premium */
+body {
+  background-color: #f8fafc;
+  color: #1e293b;
+  font-family: var(--font-sans);
+}
+
+.glass-effect {
+  @apply bg-white/80 backdrop-blur-xl border border-white/20 shadow-2xl;
+}
+
+.card-premium {
+  @apply bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/50 hover:shadow-2xl hover:shadow-indigo-100 transition-all duration-500;
+}
+
+/* Custom scrollbar for premium feel */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
-  @apply bg-slate-200 rounded-full;
+  background: #cbd5e1;
+  border-radius: 10px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-primary rounded-full opacity-40;
+  background: #94a3b8;
 }
 
 /* Animations */
@@ -71,5 +52,18 @@
 }
 
 .animate-float {
-  animation: float 6s ease-in-out infinite;
+  animation: float 3s ease-in-out infinite;
+}
+
+/* New Institutional Theme */
+.bg-night {
+  background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%);
+}
+
+.text-night {
+  color: #1a237e;
+}
+
+.border-night {
+  border-color: #1a237e;
 }

@@ -14,7 +14,9 @@ import {
   UploadCloud,
   FileCode,
   Copy,
-  CheckCircle2
+  CheckCircle2,
+  Users,
+  UserPlus
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -22,11 +24,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 export const AdminPage: React.FC = () => {
   const { isAdmin } = useAuth();
   const [exercises, setExercises] = useState<Exercise[]>([]);
-  const [activeTab, setActiveTab] = useState<'list' | 'create' | 'bulk'>('list');
+  const [students, setStudents] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<'list' | 'create' | 'bulk' | 'students'>('list');
   const [search, setSearch] = useState('');
   const [copySuccess, setCopySuccess] = useState(false);
   
-  // Form state
+  // Student Form
+  const [newStudentDni, setNewStudentDni] = useState('');
+  const [newStudentName, setNewStudentName] = useState('');
+
+  // Exercise Form state
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<Exercise>>({
     area: 'Matemáticas',
@@ -44,6 +51,7 @@ export const AdminPage: React.FC = () => {
   useEffect(() => {
     if (isAdmin) {
       fetchExercises();
+      fetchStudents();
     }
   }, [isAdmin]);
 
@@ -53,6 +61,38 @@ export const AdminPage: React.FC = () => {
       .select('*')
       .order('area', { ascending: true });
     setExercises(data || []);
+  };
+
+  const fetchStudents = async () => {
+    const { data } = await supabase
+      .from('authorized_students')
+      .select('*')
+      .order('created_at', { ascending: false });
+    setStudents(data || []);
+  };
+
+  const handleAddStudent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const { error } = await supabase
+        .from('authorized_students')
+        .insert([{ dni: newStudentDni, full_name: newStudentName }]);
+      if (error) throw error;
+      
+      setNewStudentDni('');
+      setNewStudentName('');
+      fetchStudents();
+      alert('Alumno autorizado correctamente');
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
+  const handleDeleteStudent = async (dni: string) => {
+    if (!confirm('¿Quitar autorización a este DNI?')) return;
+    const { error } = await supabase.from('authorized_students').delete().eq('dni', dni);
+    if (error) alert(error.message);
+    else fetchStudents();
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -161,12 +201,12 @@ export const AdminPage: React.FC = () => {
     <div className="space-y-10 pb-20">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-3">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-xs font-black uppercase tracking-wider">
-            <Database className="w-4 h-4" />
-            Panel de Control
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-blue-50 text-blue-900 rounded-full text-xs font-black uppercase tracking-wider">
+            <ShieldCheck className="w-4 h-4" />
+            Control Institucional
           </div>
-          <h1 className="text-5xl font-black text-slate-900 tracking-tight">Administración</h1>
-          <p className="text-xl text-slate-500 font-medium">Gestiona el banco de preguntas y la configuración del sistema.</p>
+          <h1 className="text-5xl font-black text-slate-900 tracking-tight">IE Virgen de los Dolores</h1>
+          <p className="text-xl text-slate-500 font-medium">Gestión de alumnos, preguntas y resultados de la feria.</p>
         </div>
       </div>
 
@@ -176,11 +216,21 @@ export const AdminPage: React.FC = () => {
           onClick={() => setActiveTab('list')}
           className={cn(
             "flex items-center gap-3 px-8 py-4 rounded-[1.5rem] font-black transition-all",
-            activeTab === 'list' ? "bg-white text-indigo-600 shadow-xl" : "text-slate-500 hover:text-slate-800"
+            activeTab === 'list' ? "bg-[#1a237e] text-white shadow-xl" : "text-slate-500 hover:text-slate-800"
           )}
         >
           <LayoutGrid className="w-5 h-5" />
-          Lista
+          Preguntas
+        </button>
+        <button
+          onClick={() => setActiveTab('students')}
+          className={cn(
+            "flex items-center gap-3 px-8 py-4 rounded-[1.5rem] font-black transition-all",
+            activeTab === 'students' ? "bg-[#1a237e] text-white shadow-xl" : "text-slate-500 hover:text-slate-800"
+          )}
+        >
+          <Users className="w-5 h-5" />
+          Alumnos
         </button>
         <button
           onClick={() => {
@@ -198,17 +248,17 @@ export const AdminPage: React.FC = () => {
           }}
           className={cn(
             "flex items-center gap-3 px-8 py-4 rounded-[1.5rem] font-black transition-all",
-            activeTab === 'create' ? "bg-white text-indigo-600 shadow-xl" : "text-slate-500 hover:text-slate-800"
+            activeTab === 'create' ? "bg-[#1a237e] text-white shadow-xl" : "text-slate-500 hover:text-slate-800"
           )}
         >
           <Plus className="w-5 h-5" />
-          {editingId ? 'Editar' : 'Añadir'}
+          {editingId ? 'Editar Pregunta' : 'Nueva Pregunta'}
         </button>
         <button
           onClick={() => setActiveTab('bulk')}
           className={cn(
             "flex items-center gap-3 px-8 py-4 rounded-[1.5rem] font-black transition-all",
-            activeTab === 'bulk' ? "bg-white text-indigo-600 shadow-xl" : "text-slate-500 hover:text-slate-800"
+            activeTab === 'bulk' ? "bg-[#1a237e] text-white shadow-xl" : "text-slate-500 hover:text-slate-800"
           )}
         >
           <UploadCloud className="w-5 h-5" />
@@ -217,6 +267,81 @@ export const AdminPage: React.FC = () => {
       </div>
 
       <AnimatePresence mode="wait">
+        {activeTab === 'students' && (
+          <motion.div 
+            key="students"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="space-y-8"
+          >
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-1 card-premium p-10 space-y-8">
+                 <h3 className="text-2xl font-black text-slate-800 flex items-center gap-3">
+                   <UserPlus className="text-blue-600" />
+                   Autorizar Alumno
+                 </h3>
+                 <form onSubmit={handleAddStudent} className="space-y-6">
+                    <div className="space-y-2">
+                      <label className="text-xs font-black text-slate-400 uppercase">DNI del Alumno</label>
+                      <input 
+                        type="text" 
+                        required
+                        maxLength={8}
+                        placeholder="Ej: 71234567"
+                        value={newStudentDni}
+                        onChange={(e) => setNewStudentDni(e.target.value)}
+                        className="w-full px-6 py-4 rounded-2xl bg-slate-50 border-2 border-transparent outline-none focus:bg-white focus:border-blue-600 font-bold"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-black text-slate-400 uppercase">Nombre Completo</label>
+                      <input 
+                        type="text" 
+                        required
+                        placeholder="Ej: Juan Pérez"
+                        value={newStudentName}
+                        onChange={(e) => setNewStudentName(e.target.value)}
+                        className="w-full px-6 py-4 rounded-2xl bg-slate-50 border-2 border-transparent outline-none focus:bg-white focus:border-blue-600 font-bold"
+                      />
+                    </div>
+                    <button type="submit" className="w-full py-5 bg-blue-600 text-white font-black rounded-2xl shadow-xl shadow-blue-100 hover:scale-105 transition-all">
+                      Autorizar Ingreso
+                    </button>
+                 </form>
+              </div>
+
+              <div className="lg:col-span-2 card-premium p-10 space-y-8">
+                 <h3 className="text-2xl font-black text-slate-800 flex items-center gap-3">
+                   <Users className="text-blue-600" />
+                   Alumnos Autorizados ({students.length})
+                 </h3>
+                 <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+                    {students.map(s => (
+                      <div key={s.dni} className="flex items-center justify-between p-6 bg-slate-50 rounded-2xl border border-slate-100 group hover:bg-white hover:border-blue-100 transition-all">
+                         <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center font-black text-blue-600 border border-slate-200">
+                               {s.full_name[0]}
+                            </div>
+                            <div>
+                               <p className="font-black text-slate-800">{s.full_name}</p>
+                               <p className="text-xs font-bold text-slate-400">DNI: {s.dni}</p>
+                            </div>
+                         </div>
+                         <button 
+                           onClick={() => handleDeleteStudent(s.dni)}
+                           className="p-3 text-rose-500 hover:bg-rose-50 rounded-xl transition-all opacity-0 group-hover:opacity-100"
+                         >
+                           <Trash2 className="w-5 h-5" />
+                         </button>
+                      </div>
+                    ))}
+                 </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {activeTab === 'list' && (
           <motion.div 
             key="list"
@@ -226,13 +351,13 @@ export const AdminPage: React.FC = () => {
             className="space-y-8"
           >
             <div className="relative group max-w-2xl">
-              <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
+              <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-slate-400 group-focus-within:text-[#1a237e] transition-colors" />
               <input
                 type="text"
                 placeholder="Buscar por enunciado, área o subárea..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-16 pr-8 py-5 rounded-[2rem] border-2 border-slate-50 bg-white outline-none focus:border-indigo-500 focus:shadow-2xl shadow-slate-200/50 transition-all text-lg font-medium"
+                className="w-full pl-16 pr-8 py-5 rounded-[2rem] border-2 border-slate-50 bg-white outline-none focus:border-[#1a237e] focus:shadow-2xl shadow-slate-200/50 transition-all text-lg font-medium"
               />
             </div>
 
@@ -241,7 +366,7 @@ export const AdminPage: React.FC = () => {
                 <div key={ex.id} className="card-premium p-8 flex flex-col md:flex-row items-center justify-between gap-6">
                   <div className="flex-1 space-y-4">
                     <div className="flex flex-wrap gap-2">
-                       <span className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-[10px] font-black uppercase">{ex.area}</span>
+                       <span className="px-3 py-1 bg-blue-50 text-blue-900 rounded-lg text-[10px] font-black uppercase">{ex.area}</span>
                        <span className="px-3 py-1 bg-slate-50 text-slate-500 rounded-lg text-[10px] font-black uppercase">{ex.subarea}</span>
                        <span className={cn(
                          "px-3 py-1 rounded-lg text-[10px] font-black uppercase",
@@ -254,7 +379,7 @@ export const AdminPage: React.FC = () => {
                   <div className="flex items-center gap-3 w-full md:w-auto">
                     <button 
                       onClick={() => startEdit(ex)}
-                      className="flex-1 md:flex-none p-4 rounded-2xl bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
+                      className="flex-1 md:flex-none p-4 rounded-2xl bg-blue-50 text-blue-900 hover:bg-[#1a237e] hover:text-white transition-all shadow-sm"
                     >
                       <Edit3 className="w-6 h-6" />
                     </button>
@@ -285,8 +410,8 @@ export const AdminPage: React.FC = () => {
                   <label className="text-sm font-black text-slate-400 uppercase tracking-widest pl-2">Área Principal</label>
                   <select 
                     value={formData.area}
-                    onChange={(e) => setFormData({...formData, area: e.target.value as Area})}
-                    className="w-full px-6 py-4 rounded-2xl border-2 border-slate-50 bg-slate-50 outline-none focus:bg-white focus:border-indigo-500 transition-all font-bold"
+                    onChange={(e) => setFormData({...formData, area: e.target.value as any})}
+                    className="w-full px-6 py-4 rounded-2xl border-2 border-slate-50 bg-slate-50 outline-none focus:bg-white focus:border-blue-600 transition-all font-bold"
                   >
                     {['Matemáticas', 'Comunicación', 'Biología', 'Física', 'Química', 'Ciencias Sociales', 'Inglés', 'Razonamiento Matemático', 'Razonamiento Verbal'].map(a => (
                       <option key={a} value={a}>{a}</option>
@@ -301,7 +426,7 @@ export const AdminPage: React.FC = () => {
                     placeholder="Ej: Álgebra, Sintaxis..."
                     value={formData.subarea}
                     onChange={(e) => setFormData({...formData, subarea: e.target.value})}
-                    className="w-full px-6 py-4 rounded-2xl border-2 border-slate-50 bg-slate-50 outline-none focus:bg-white focus:border-indigo-500 transition-all font-bold"
+                    className="w-full px-6 py-4 rounded-2xl border-2 border-slate-50 bg-slate-50 outline-none focus:bg-white focus:border-blue-600 transition-all font-bold"
                   />
                 </div>
                 <div className="space-y-3">
@@ -334,7 +459,7 @@ export const AdminPage: React.FC = () => {
                   placeholder="Escribe el problema aquí..."
                   value={formData.enunciado}
                   onChange={(e) => setFormData({...formData, enunciado: e.target.value})}
-                  className="w-full px-8 py-6 rounded-[2.5rem] border-2 border-slate-50 bg-slate-50 outline-none focus:bg-white focus:border-indigo-500 transition-all font-medium text-lg"
+                  className="w-full px-8 py-6 rounded-[2.5rem] border-2 border-slate-50 bg-slate-50 outline-none focus:bg-white focus:border-blue-600 transition-all font-medium text-lg"
                 />
               </div>
 
@@ -365,7 +490,7 @@ export const AdminPage: React.FC = () => {
                            newOpts[idx] = e.target.value;
                            setFormData({...formData, opciones: newOpts});
                          }}
-                         className="flex-1 px-6 py-4 rounded-2xl border-2 border-slate-50 bg-slate-50 outline-none focus:bg-white focus:border-indigo-500 transition-all font-bold"
+                         className="flex-1 px-6 py-4 rounded-2xl border-2 border-slate-50 bg-slate-50 outline-none focus:bg-white focus:border-blue-600 transition-all font-bold"
                        />
                     </div>
                   ))}
@@ -380,14 +505,14 @@ export const AdminPage: React.FC = () => {
                   placeholder="Justifica la respuesta..."
                   value={formData.explicacion}
                   onChange={(e) => setFormData({...formData, explicacion: e.target.value})}
-                  className="w-full px-8 py-6 rounded-[2rem] border-2 border-slate-50 bg-slate-50 outline-none focus:bg-white focus:border-indigo-500 transition-all font-medium text-slate-600"
+                  className="w-full px-8 py-6 rounded-[2rem] border-2 border-slate-50 bg-slate-50 outline-none focus:bg-white focus:border-blue-600 transition-all font-medium text-slate-600"
                 />
               </div>
 
               <div className="flex gap-4 pt-6">
                 <button
                   type="submit"
-                  className="flex-1 py-6 bg-indigo-600 text-white font-black rounded-[2rem] shadow-2xl shadow-indigo-200 hover:scale-[1.02] active:scale-95 transition-all text-xl flex items-center justify-center gap-3"
+                  className="flex-1 py-6 bg-blue-600 text-white font-black rounded-[2rem] shadow-2xl shadow-blue-200 hover:scale-[1.02] active:scale-95 transition-all text-xl flex items-center justify-center gap-3"
                 >
                   <Save className="w-6 h-6" />
                   {editingId ? 'Guardar Cambios' : 'Crear Pregunta'}
@@ -418,7 +543,7 @@ export const AdminPage: React.FC = () => {
                     value={bulkText}
                     onChange={(e) => setBulkText(e.target.value)}
                     placeholder='[ { "area": "Matemáticas", ... }, { ... } ]'
-                    className="w-full p-8 rounded-[2.5rem] bg-slate-900 text-emerald-400 font-mono text-sm outline-none border-4 border-slate-800 focus:border-indigo-500/50 transition-all shadow-inner"
+                    className="w-full p-8 rounded-[2.5rem] bg-slate-900 text-emerald-400 font-mono text-sm outline-none border-4 border-slate-800 focus:border-blue-500/50 transition-all shadow-inner"
                   />
                   <button
                     onClick={handleBulkImport}
@@ -431,13 +556,13 @@ export const AdminPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="card-premium p-10 bg-indigo-600 text-white space-y-8 h-fit">
+              <div className="card-premium p-10 bg-blue-900 text-white space-y-8 h-fit">
                 <div className="p-4 bg-white/20 rounded-2xl w-fit">
                   <FileCode className="w-8 h-8" />
                 </div>
                 <div className="space-y-4">
                   <h4 className="text-2xl font-black italic">Formato de Ejemplo</h4>
-                  <p className="text-indigo-100 text-sm leading-relaxed">
+                  <p className="text-blue-100 text-sm leading-relaxed">
                     Usa este formato para que el sistema reconozca tus preguntas. Puedes copiarlo y editarlo.
                   </p>
                 </div>
@@ -458,7 +583,7 @@ export const AdminPage: React.FC = () => {
 
                 <button
                   onClick={copyTemplate}
-                  className="w-full py-4 bg-white text-indigo-600 font-black rounded-xl flex items-center justify-center gap-2 hover:bg-indigo-50 transition-all"
+                  className="w-full py-4 bg-white text-blue-900 font-black rounded-xl flex items-center justify-center gap-2 hover:bg-blue-50 transition-all"
                 >
                   {copySuccess ? <CheckCircle2 className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
                   {copySuccess ? 'Copiado' : 'Copiar Plantilla'}
