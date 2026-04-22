@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
-import type { Exercise, Area, Dificultad } from '@/types';
+import type { Exercise, Dificultad } from '@/types';
 import { 
   Plus, 
   Trash2, 
@@ -9,14 +9,14 @@ import {
   Search, 
   Save, 
   AlertCircle,
-  Database,
   LayoutGrid,
   UploadCloud,
   FileCode,
   Copy,
   CheckCircle2,
   Users,
-  UserPlus
+  UserPlus,
+  ShieldCheck
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';

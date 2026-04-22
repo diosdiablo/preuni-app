@@ -9,7 +9,7 @@ export const AuthPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { signIn } = useAuth();
+  const { signOut } = useAuth();
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
