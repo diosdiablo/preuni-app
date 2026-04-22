@@ -54,19 +54,15 @@ export const DashboardPage: React.FC = () => {
         .order('created_at', { ascending: false });
       setExams(examsData || []);
 
+      const areas: Area[] = ['Matemáticas', 'Ciencia', 'Comunicación', 'Ciencias Sociales', 'Inglés'];
       const areaColors: Record<string, string> = {
-        'Matemáticas': '#1a237e',
-        'Comunicación': '#c62828',
-        'Biología': '#2e7d32',
-        'Física': '#ef6c00',
-        'Química': '#00838f',
-        'Ciencias Sociales': '#4527a0',
-        'Inglés': '#1565c0',
-        'Razonamiento Matemático': '#00695c',
-        'Razonamiento Verbal': '#d84315'
+        'Matemáticas': '#3b82f6',
+        'Ciencia': '#10b981',
+        'Comunicación': '#f43f5e',
+        'Ciencias Sociales': '#f59e0b',
+        'Inglés': '#8b5cf6'
       };
 
-      const areas: Area[] = ['Matemáticas', 'Comunicación', 'Biología', 'Física', 'Química', 'Ciencias Sociales', 'Inglés', 'Razonamiento Matemático', 'Razonamiento Verbal'];
       const areaStats = areas.map(area => ({
         area: area.split(' ')[0],
         full: area,

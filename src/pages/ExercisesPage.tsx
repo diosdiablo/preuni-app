@@ -30,26 +30,18 @@ export const ExercisesPage: React.FC = () => {
   const areas: (Area | 'All')[] = [
     'All', 
     'Matemáticas', 
-    'Comunicación', 
-    'Biología',
-    'Física',
-    'Química',
+    'Ciencia',
+    'Comunicación',
     'Ciencias Sociales', 
-    'Inglés', 
-    'Razonamiento Matemático', 
-    'Razonamiento Verbal'
+    'Inglés'
   ];
 
   const areaColors: Record<string, string> = {
     'Matemáticas': 'bg-blue-500',
-    'Comunicación': 'bg-pink-500',
-    'Biología': 'bg-emerald-500',
-    'Física': 'bg-emerald-600',
-    'Química': 'bg-emerald-700',
+    'Ciencia': 'bg-emerald-500',
+    'Comunicación': 'bg-rose-500',
     'Ciencias Sociales': 'bg-amber-500',
     'Inglés': 'bg-violet-500',
-    'Razonamiento Matemático': 'bg-cyan-500',
-    'Razonamiento Verbal': 'bg-rose-500',
     'All': 'bg-indigo-600'
   };
 

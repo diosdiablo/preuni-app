@@ -40,7 +40,7 @@ const BLOCKS: BlockConfig[] = [
     description: 'Medicina, Farmacia, Odontología',
     icon: Stethoscope,
     color: 'emerald',
-    distribution: { 'Biología': 20, 'Química': 20, 'Física': 10, 'Razonamiento Verbal': 20, 'Razonamiento Matemático': 15, 'Comunicación': 15 }
+    distribution: { 'Ciencia': 50, 'Comunicación': 35, 'Matemáticas': 15 }
   },
   {
     id: 'B',
@@ -48,7 +48,7 @@ const BLOCKS: BlockConfig[] = [
     description: 'Sistemas, Civil, Mecánica',
     icon: Cpu,
     color: 'blue',
-    distribution: { 'Matemáticas': 30, 'Física': 20, 'Química': 15, 'Razonamiento Matemático': 20, 'Razonamiento Verbal': 15 }
+    distribution: { 'Matemáticas': 50, 'Ciencia': 35, 'Comunicación': 15 }
   },
   {
     id: 'C',
@@ -56,7 +56,7 @@ const BLOCKS: BlockConfig[] = [
     description: 'Derecho, Psicología, Educación',
     icon: Gavel,
     color: 'rose',
-    distribution: { 'Razonamiento Verbal': 30, 'Ciencias Sociales': 25, 'Comunicación': 20, 'Razonamiento Matemático': 15, 'Inglés': 10 }
+    distribution: { 'Comunicación': 50, 'Ciencias Sociales': 25, 'Matemáticas': 15, 'Inglés': 10 }
   },
   {
     id: 'D',
@@ -64,7 +64,7 @@ const BLOCKS: BlockConfig[] = [
     description: 'Admin, Contabilidad, Economía',
     icon: BadgeDollarSign,
     color: 'amber',
-    distribution: { 'Razonamiento Matemático': 30, 'Ciencias Sociales': 20, 'Matemáticas': 15, 'Razonamiento Verbal': 20, 'Comunicación': 15 }
+    distribution: { 'Matemáticas': 45, 'Ciencias Sociales': 20, 'Comunicación': 35 }
   }
 ];
 
