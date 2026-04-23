@@ -221,9 +221,14 @@ export const AdminPage: React.FC = () => {
 
   const handleDelete = async (id: string) => {
     if (!confirm('¿Seguro que deseas eliminar este ejercicio?')) return;
-    const { error } = await supabase.from('exercises').delete().eq('id', id);
-    if (error) alert(error.message);
-    else fetchExercises();
+    try {
+      const { error } = await supabase.from('exercises').delete().eq('id', id);
+      if (error) throw error;
+      alert('Ejercicio eliminado correctamente');
+      fetchExercises();
+    } catch (err: any) {
+      alert('Error al eliminar: ' + err.message);
+    }
   };
 
   const startEdit = (ex: Exercise) => {
