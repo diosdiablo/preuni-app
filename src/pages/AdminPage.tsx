@@ -64,6 +64,31 @@ export const AdminPage: React.FC = () => {
     setExercises(data || []);
   };
 
+  const [availableSubareas, setAvailableSubareas] = useState<string[]>([]);
+  const [isCustomSubarea, setIsCustomSubarea] = useState(false);
+
+  const fetchAvailableSubareas = async () => {
+    const { data } = await supabase
+      .from('exercises')
+      .select('subarea')
+      .eq('area', formData.area);
+    
+    if (data) {
+      const unique = Array.from(new Set(data.map(i => i.subarea))).filter(Boolean).sort();
+      setAvailableSubareas(unique);
+      // If the current subarea isn't in the list and isn't empty, it's custom
+      if (formData.subarea && !unique.includes(formData.subarea)) {
+        setIsCustomSubarea(true);
+      } else {
+        setIsCustomSubarea(false);
+      }
+    }
+  };
+
+  useEffect(() => {
+    fetchAvailableSubareas();
+  }, [formData.area, exercises]);
+
   // Add paste event listener
   useEffect(() => {
     const handlePaste = (e: ClipboardEvent) => {
@@ -478,14 +503,44 @@ export const AdminPage: React.FC = () => {
                 </div>
                 <div className="space-y-3">
                   <label className="text-sm font-black text-slate-400 uppercase tracking-widest pl-2">Subárea</label>
-                  <input 
-                    type="text" 
-                    required
-                    placeholder="Ej: Álgebra, Sintaxis..."
-                    value={formData.subarea}
-                    onChange={(e) => setFormData({...formData, subarea: e.target.value})}
-                    className="w-full px-6 py-4 rounded-2xl border-2 border-slate-50 bg-slate-50 outline-none focus:bg-white focus:border-blue-600 transition-all font-bold"
-                  />
+                  {!isCustomSubarea ? (
+                    <select 
+                      value={formData.subarea}
+                      onChange={(e) => {
+                        if (e.target.value === 'ADD_NEW') {
+                          setIsCustomSubarea(true);
+                          setFormData({...formData, subarea: ''});
+                        } else {
+                          setFormData({...formData, subarea: e.target.value});
+                        }
+                      }}
+                      className="w-full px-6 py-4 rounded-2xl border-2 border-slate-50 bg-slate-50 outline-none focus:bg-white focus:border-blue-600 transition-all font-bold"
+                    >
+                      <option value="">Seleccionar subárea...</option>
+                      {availableSubareas.map(s => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                      <option value="ADD_NEW" className="text-blue-600 font-black">+ Añadir nueva subárea...</option>
+                    </select>
+                  ) : (
+                    <div className="relative">
+                      <input 
+                        type="text" 
+                        required
+                        placeholder="Escribe la nueva subárea..."
+                        value={formData.subarea}
+                        onChange={(e) => setFormData({...formData, subarea: e.target.value})}
+                        className="w-full px-6 py-4 rounded-2xl border-2 border-blue-100 bg-blue-50/30 outline-none focus:bg-white focus:border-blue-600 transition-all font-bold pr-32"
+                      />
+                      <button 
+                        type="button"
+                        onClick={() => setIsCustomSubarea(false)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-blue-600 uppercase hover:underline"
+                      >
+                        Ver lista
+                      </button>
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-3">
                   <label className="text-sm font-black text-slate-400 uppercase tracking-widest pl-2">Dificultad</label>
