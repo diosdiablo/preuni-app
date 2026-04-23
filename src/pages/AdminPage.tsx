@@ -40,7 +40,7 @@ export const AdminPage: React.FC = () => {
     subarea: '',
     dificultad: 'Medio',
     enunciado: '',
-    opciones: ['', '', '', ''],
+    opciones: ['', '', '', '', ''],
     respuesta_correcta: 0,
     explicacion: '',
     image_url: ''
@@ -198,7 +198,7 @@ export const AdminPage: React.FC = () => {
         subarea: '',
         dificultad: 'Medio',
         enunciado: '',
-        opciones: ['', '', '', ''],
+        opciones: ['', '', '', '', ''],
         respuesta_correcta: 0,
         explicacion: ''
       });
@@ -234,7 +234,7 @@ export const AdminPage: React.FC = () => {
     "subarea": "Química",
     "dificultad": "Medio",
     "enunciado": "La radiactividad es la emisión espontánea de radiaciones de núcleos de átomos...",
-    "opciones": ["Inestables", "Estables", "Neutros", "Gases"],
+    "opciones": ["Inestables", "Estables", "Neutros", "Gases", "Ninguna"],
     "respuesta_correcta": 0,
     "explicacion": "La radiactividad proviene de núcleos inestables."
   }
@@ -324,7 +324,7 @@ export const AdminPage: React.FC = () => {
               subarea: '',
               dificultad: 'Medio',
               enunciado: '',
-              opciones: ['', '', '', ''],
+              opciones: ['', '', '', '', ''],
               respuesta_correcta: 0,
               explicacion: ''
             });
@@ -621,35 +621,66 @@ export const AdminPage: React.FC = () => {
               <div className="space-y-6">
                 <label className="text-sm font-black text-slate-400 uppercase tracking-widest pl-2">Opciones</label>
                 <div className="grid grid-cols-1 gap-4">
-                  {formData.opciones?.map((opt, idx) => (
-                    <div key={idx} className="flex gap-4 items-center">
-                       <button
-                         type="button"
-                         onClick={() => setFormData({...formData, respuesta_correcta: idx})}
-                         className={cn(
-                           "w-12 h-12 rounded-2xl flex items-center justify-center font-black text-xl shadow-md transition-all shrink-0",
-                           formData.respuesta_correcta === idx 
-                             ? "bg-emerald-500 text-white" 
-                             : "bg-white text-slate-300 border-2 border-slate-100"
-                         )}
-                       >
-                         {String.fromCharCode(65 + idx)}
-                       </button>
-                       <input 
-                         type="text"
-                         required
-                         placeholder={`Opción ${String.fromCharCode(65 + idx)}`}
-                         value={opt}
-                         onChange={(e) => {
-                           const newOpts = [...(formData.opciones || [])];
-                           newOpts[idx] = e.target.value;
-                           setFormData({...formData, opciones: newOpts});
-                         }}
-                         className="flex-1 px-6 py-4 rounded-2xl border-2 border-slate-50 bg-slate-50 outline-none focus:bg-white focus:border-blue-600 transition-all font-bold"
-                       />
+                    {formData.opciones?.map((opt, idx) => (
+                      <div key={idx} className="flex gap-4">
+                        <div className={cn(
+                          "w-14 h-14 rounded-2xl flex items-center justify-center font-black text-lg shrink-0 transition-all border-2",
+                          formData.respuesta_correcta === idx 
+                            ? "bg-emerald-500 text-white border-emerald-500" 
+                            : "bg-slate-50 text-slate-400 border-slate-100"
+                        )}>
+                          {String.fromCharCode(65 + idx)}
+                        </div>
+                        <input 
+                          type="text" 
+                          required
+                          placeholder={`Opción ${String.fromCharCode(65 + idx)}`}
+                          value={opt}
+                          onChange={(e) => {
+                            const newOptions = [...(formData.opciones || [])];
+                            newOptions[idx] = e.target.value;
+                            setFormData({...formData, opciones: newOptions});
+                          }}
+                          onFocus={() => setFormData({...formData, respuesta_correcta: idx})}
+                          className={cn(
+                            "flex-1 px-6 py-4 rounded-2xl border-2 outline-none transition-all font-bold",
+                            formData.respuesta_correcta === idx 
+                              ? "bg-white border-emerald-500 shadow-lg shadow-emerald-100" 
+                              : "bg-slate-50 border-transparent focus:bg-white focus:border-blue-600"
+                          )}
+                        />
+                      </div>
+                    ))}
+                    <div className="flex gap-2">
+                      <button 
+                        type="button"
+                        onClick={() => setFormData({
+                          ...formData, 
+                          opciones: [...(formData.opciones || []), '']
+                        })}
+                        className="flex-1 py-3 rounded-xl border-2 border-dashed border-slate-200 text-slate-400 text-xs font-black uppercase hover:bg-slate-50 transition-all"
+                      >
+                        + Añadir Alternativa
+                      </button>
+                      {formData.opciones && formData.opciones.length > 2 && (
+                        <button 
+                          type="button"
+                          onClick={() => {
+                            const newOptions = [...formData.opciones!];
+                            newOptions.pop();
+                            setFormData({
+                              ...formData, 
+                              opciones: newOptions,
+                              respuesta_correcta: Math.min(formData.respuesta_correcta!, newOptions.length - 1)
+                            });
+                          }}
+                          className="flex-1 py-3 rounded-xl border-2 border-dashed border-rose-200 text-rose-400 text-xs font-black uppercase hover:bg-rose-50 transition-all"
+                        >
+                          - Quitar Última
+                        </button>
+                      )}
                     </div>
-                  ))}
-                </div>
+                  </div>
               </div>
 
               <div className="space-y-3">
@@ -729,7 +760,7 @@ export const AdminPage: React.FC = () => {
     "subarea": "Química",
     "dificultad": "Fácil",
     "enunciado": "La radiactividad...",
-    "opciones": ["A", "B", "C", "D"],
+    "opciones": ["A", "B", "C", "D", "E"],
     "respuesta_correcta": 0,
     "explicacion": "..."
   }
