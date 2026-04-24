@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { useExam } from '@/context/ExamContext';
-import { useBlocker } from 'react-router-dom';
 import type { Exercise, Area, Dificultad } from '@/types';
 import { 
   Play, 
@@ -104,12 +103,8 @@ export const ExamsPage: React.FC = () => {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, []);
 
-  // 2. Block React Router internal navigation (SPA navigation)
-  const blocker = useBlocker(
-    ({ currentLocation, nextLocation }) =>
-      examActiveRef.current &&
-      currentLocation.pathname !== nextLocation.pathname
-  );
+  // 2. Block React Router internal navigation — disabled (useBlocker API changed in v7)
+  // The sidebar is hidden via ExamContext so users can't navigate anyway
 
   // Sync exam status with both ref and context
   useEffect(() => {
@@ -634,39 +629,6 @@ export const ExamsPage: React.FC = () => {
             ))}
           </div>
         </div>
-        {/* Router Navigation Blocker Modal */}
-        {blocker.state === 'blocked' && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center p-6">
-            <div className="absolute inset-0 bg-slate-900/70 backdrop-blur-sm" />
-            <div className="relative bg-white rounded-[2.5rem] p-10 max-w-md w-full shadow-2xl text-center space-y-6">
-              <div className="p-5 bg-rose-50 rounded-2xl w-fit mx-auto">
-                <AlertCircle className="w-12 h-12 text-rose-500" />
-              </div>
-              <h3 className="text-2xl font-black text-slate-800">¿Abandonar el simulacro?</h3>
-              <p className="text-slate-500 font-medium">Si sales ahora, <strong>no se guardará ningún resultado</strong> y el examen se perderá completamente.</p>
-              <div className="flex gap-4">
-                <button
-                  onClick={() => blocker.reset()}
-                  className="flex-1 py-4 rounded-2xl border-2 border-slate-200 font-black text-slate-600 hover:bg-slate-50"
-                >
-                  Continuar examen
-                </button>
-                <button
-                  onClick={() => {
-                    blocker.proceed();
-                    setStep('setup');
-                    setExercises([]);
-                    setUserAnswers({});
-                    setTime(0);
-                    setCurrentQuestion(0);
-                  }}
-                  className="flex-1 py-4 rounded-2xl bg-rose-500 text-white font-black hover:bg-rose-600"
-                >
-                  Sí, abandonar
-                </button>
-              </div>
-            </div>
-          </div>
         )}
 
       </div>
