@@ -1,13 +1,15 @@
 import React from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { useExam } from '@/context/ExamContext';
 import { supabase } from '@/lib/supabase';
-import { LogOut, LayoutDashboard, BookOpen, GraduationCap, BarChart3, Menu, X, Sparkles, ShieldCheck, KeyRound, Check, AlertCircle, Loader2 } from 'lucide-react';
+import { LogOut, LayoutDashboard, BookOpen, GraduationCap, BarChart3, Menu, X, Sparkles, ShieldCheck, KeyRound, Check, AlertCircle, Loader2, ShieldAlert } from 'lucide-react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const AppLayout: React.FC = () => {
   const { user, isAdmin, signOut } = useAuth();
+  const { examInProgress } = useExam();
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
   const [showPasswordModal, setShowPasswordModal] = React.useState(false);
   const [newPassword, setNewPassword] = React.useState('');
@@ -28,24 +30,34 @@ export const AppLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
-      {/* Mobile Header - Glassmorphism */}
-      <div className="md:hidden flex items-center justify-between p-4 glass-effect z-[60] sticky top-0 shadow-sm">
-        <Link to="/" className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent flex items-center gap-2">
-          <GraduationCap className="w-8 h-8 text-blue-600" />
-          <span>Virgen de los Dolores</span>
-        </Link>
-        <button 
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)} 
-          className="p-2 rounded-xl bg-slate-100 text-slate-700 active:scale-95 transition-all"
-        >
-          {isSidebarOpen ? <X /> : <Menu />}
-        </button>
-      </div>
+      {/* Exam Lockout Banner - Mobile */}
+      {examInProgress ? (
+        <div className="md:hidden flex items-center justify-between p-4 bg-amber-500 z-[60] sticky top-0 shadow-lg">
+          <div className="flex items-center gap-3 text-white">
+            <ShieldAlert className="w-6 h-6" />
+            <span className="font-black text-sm">Simulacro en curso — Naveg. bloqueada</span>
+          </div>
+        </div>
+      ) : (
+        /* Mobile Header - Glassmorphism */
+        <div className="md:hidden flex items-center justify-between p-4 glass-effect z-[60] sticky top-0 shadow-sm">
+          <Link to="/" className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent flex items-center gap-2">
+            <GraduationCap className="w-8 h-8 text-blue-600" />
+            <span>Virgen de los Dolores</span>
+          </Link>
+          <button 
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)} 
+            className="p-2 rounded-xl bg-slate-100 text-slate-700 active:scale-95 transition-all"
+          >
+            {isSidebarOpen ? <X /> : <Menu />}
+          </button>
+        </div>
+      )}
 
-      {/* Sidebar - Desktop Glassmorphism */}
+      {/* Sidebar - Hidden during exam */}
       <aside className={cn(
         "fixed inset-y-0 left-0 z-50 w-72 transition-all duration-500 ease-in-out md:translate-x-0 md:static",
-        isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        examInProgress ? "-translate-x-full md:-translate-x-full md:hidden" : (isSidebarOpen ? "translate-x-0" : "-translate-x-full")
       )}>
         <div className="h-full m-4 bg-white/80 backdrop-blur-2xl border border-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.04)] flex flex-col overflow-hidden">
           <div className="p-8 hidden md:block">

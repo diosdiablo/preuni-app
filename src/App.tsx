@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
+import { ExamProvider } from '@/context/ExamContext';
 import { AppLayout } from '@/layouts/AppLayout';
 import { AuthPage } from '@/pages/AuthPage';
 import { DashboardPage } from '@/pages/DashboardPage';
@@ -25,25 +26,27 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/auth" element={<AuthPage />} />
-          
-          <Route path="/" element={
-            <ProtectedRoute>
-              <AppLayout />
-            </ProtectedRoute>
-          }>
-            <Route index element={<DashboardPage />} />
-            <Route path="ejercicios" element={<ExercisesPage />} />
-            <Route path="examenes" element={<ExamsPage />} />
-            <Route path="progreso" element={<DashboardPage />} />
-            <Route path="admin" element={<AdminPage />} />
-          </Route>
+      <ExamProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/auth" element={<AuthPage />} />
+            
+            <Route path="/" element={
+              <ProtectedRoute>
+                <AppLayout />
+              </ProtectedRoute>
+            }>
+              <Route index element={<DashboardPage />} />
+              <Route path="ejercicios" element={<ExercisesPage />} />
+              <Route path="examenes" element={<ExamsPage />} />
+              <Route path="progreso" element={<DashboardPage />} />
+              <Route path="admin" element={<AdminPage />} />
+            </Route>
 
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-      </BrowserRouter>
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        </BrowserRouter>
+      </ExamProvider>
     </AuthProvider>
   );
 }
