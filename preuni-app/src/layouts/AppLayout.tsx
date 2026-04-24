@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useExam } from '@/context/ExamContext';
 import { supabase } from '@/lib/supabase';
@@ -15,7 +15,18 @@ export const AppLayout: React.FC = () => {
   const [newPassword, setNewPassword] = React.useState('');
   const [isChanging, setIsChanging] = React.useState(false);
   const [msg, setMsg] = React.useState<{ type: 'success' | 'error', text: string } | null>(null);
+  const [studentName, setStudentName] = React.useState<string>('');
   const location = useLocation();
+
+  useEffect(() => {
+    const fetchStudentName = async () => {
+      if (!user?.email || isAdmin) return;
+      const dni = user.email.split('@')[0];
+      const { data } = await supabase.from('authorized_students').select('full_name').eq('dni', dni).single();
+      if (data?.full_name) setStudentName(data.full_name);
+    };
+    fetchStudentName();
+  }, [user, isAdmin]);
 
   const navItems = [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/', color: 'blue' },
@@ -107,7 +118,7 @@ export const AppLayout: React.FC = () => {
                   {user?.email?.[0].toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-black text-slate-800 truncate mb-0.5">{user?.email?.split('@')[0]}</p>
+                  <p className="text-sm font-black text-slate-800 truncate mb-0.5">{studentName || user?.email?.split('@')[0]}</p>
                   <div className="flex items-center gap-1">
                     <Sparkles className="w-3 h-3 text-yellow-500 fill-yellow-500" />
                     <span className="text-[10px] font-black text-blue-900 uppercase tracking-tighter">

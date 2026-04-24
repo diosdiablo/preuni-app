@@ -32,14 +32,23 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
 export const DashboardPage: React.FC = () => {
-  const { user, profile: authProfile } = useAuth();
+  const { user, isAdmin, profile: authProfile } = useAuth();
   const [exams, setExams] = useState<Exam[]>([]);
   const [stats, setStats] = useState<{area: string, value: number, color: string}[]>([]);
   const [loading, setLoading] = useState(true);
+  const [studentName, setStudentName] = useState<string>('');
 
   useEffect(() => {
     if (user) {
       fetchData();
+      if (!isAdmin) {
+        const fetchStudentName = async () => {
+          const dni = user.email?.split('@')[0];
+          const { data } = await supabase.from('authorized_students').select('full_name').eq('dni', dni).single();
+          if (data?.full_name) setStudentName(data.full_name);
+        };
+        fetchStudentName();
+      }
     }
   }, [user]);
 
@@ -111,7 +120,7 @@ export const DashboardPage: React.FC = () => {
     return { label: 'Avanzado', color: 'text-emerald-600 bg-emerald-50 border-emerald-100' };
   };
 
-  const userName = user?.email?.split('@')[0] || 'Estudiante';
+  const userName = studentName || user?.email?.split('@')[0] || 'Estudiante';
 
   return (
     <div className="space-y-10 pb-12">
