@@ -17,6 +17,8 @@ export interface Exercise {
   respuesta_correcta: number;
   explicacion: string;
   image_url?: string;
+  explanation_image_url?: string;
+  created_at?: string;
 }
 
 export interface Profile {

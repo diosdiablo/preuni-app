@@ -43,8 +43,11 @@ export const AdminPage: React.FC = () => {
     opciones: ['', '', '', '', ''],
     respuesta_correcta: 0,
     explicacion: '',
-    image_url: ''
+    image_url: '',
+    explanation_image_url: ''
   });
+
+  const [focusedField, setFocusedField] = useState<'image_url' | 'explanation_image_url' | null>(null);
 
   // Bulk state
   const [bulkText, setBulkText] = useState('');
@@ -92,7 +95,7 @@ export const AdminPage: React.FC = () => {
   // Add paste event listener
   useEffect(() => {
     const handlePaste = (e: ClipboardEvent) => {
-      if (activeTab !== 'create') return;
+      if (activeTab !== 'create' || !focusedField) return;
       
       const items = e.clipboardData?.items;
       if (!items) return;
@@ -102,7 +105,7 @@ export const AdminPage: React.FC = () => {
           const blob = items[i].getAsFile();
           if (blob) {
             const file = new File([blob], "pasted-image.png", { type: blob.type });
-            uploadImage(file);
+            uploadImage(file, focusedField);
           }
         }
       }
@@ -110,9 +113,9 @@ export const AdminPage: React.FC = () => {
 
     window.addEventListener('paste', handlePaste);
     return () => window.removeEventListener('paste', handlePaste);
-  }, [activeTab]);
+  }, [activeTab, focusedField]);
 
-  const uploadImage = async (file: File) => {
+  const uploadImage = async (file: File, field: 'image_url' | 'explanation_image_url') => {
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random()}.${fileExt}`;
@@ -128,10 +131,10 @@ export const AdminPage: React.FC = () => {
         .from('exercises')
         .getPublicUrl(filePath);
 
-      setFormData(prev => ({ ...prev, image_url: publicUrl }));
-      alert('Imagen pegada y subida correctamente');
+      setFormData(prev => ({ ...prev, [field]: publicUrl }));
+      alert('Imagen subida correctamente');
     } catch (err: any) {
-      alert('Error subiendo imagen pegada: ' + err.message);
+      alert('Error subiendo imagen: ' + err.message);
     }
   };
 
@@ -167,10 +170,10 @@ export const AdminPage: React.FC = () => {
     else fetchStudents();
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: 'image_url' | 'explanation_image_url') => {
     const file = e.target.files?.[0];
     if (!file) return;
-    uploadImage(file);
+    uploadImage(file, field);
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -200,7 +203,9 @@ export const AdminPage: React.FC = () => {
         enunciado: '',
         opciones: ['', '', '', '', ''],
         respuesta_correcta: 0,
-        explicacion: ''
+        explicacion: '',
+        image_url: '',
+        explanation_image_url: ''
       });
       setEditingId(null);
       setActiveTab('list');
@@ -263,7 +268,8 @@ export const AdminPage: React.FC = () => {
           opciones: ['', '', '', '', ''],
           respuesta_correcta: 0,
           explicacion: '',
-          image_url: ''
+          image_url: '',
+          explanation_image_url: ''
         });
         setActiveTab('list');
       }
@@ -344,7 +350,9 @@ export const AdminPage: React.FC = () => {
               enunciado: '',
               opciones: ['', '', '', '', ''],
               respuesta_correcta: 0,
-              explicacion: ''
+              explicacion: '',
+              image_url: '',
+              explanation_image_url: ''
             });
           }}
           className={cn(
@@ -595,18 +603,25 @@ export const AdminPage: React.FC = () => {
               </div>
 
               <div className="space-y-4">
-                <label className="text-sm font-black text-slate-400 uppercase tracking-widest pl-2">Imagen del Ejercicio (Opcional)</label>
+                <label className="text-sm font-black text-slate-400 uppercase tracking-widest pl-2">Imagen del Enunciado (Opcional)</label>
                 <div className="flex flex-col gap-4">
                   <input 
                     type="file" 
                     accept="image/*"
-                    onChange={handleImageUpload}
+                    onChange={(e) => handleImageUpload(e, 'image_url')}
                     className="hidden"
                     id="image-upload"
                   />
-                  <label 
-                    htmlFor="image-upload"
-                    className="flex flex-col items-center justify-center gap-4 p-10 border-4 border-dashed border-slate-100 rounded-[2.5rem] bg-slate-50 hover:bg-white hover:border-blue-100 transition-all cursor-pointer group"
+                  <div 
+                    onClick={() => setFocusedField('image_url')}
+                    onBlur={() => setFocusedField(null)}
+                    tabIndex={0}
+                    className={cn(
+                      "flex flex-col items-center justify-center gap-4 p-10 border-4 border-dashed rounded-[2.5rem] transition-all cursor-pointer group outline-none",
+                      focusedField === 'image_url' 
+                        ? "border-blue-600 bg-blue-50 shadow-inner" 
+                        : "border-slate-100 bg-slate-50 hover:bg-white hover:border-blue-100"
+                    )}
                   >
                     {formData.image_url ? (
                       <div className="relative w-full aspect-video">
@@ -617,20 +632,28 @@ export const AdminPage: React.FC = () => {
                       </div>
                     ) : (
                       <>
-                        <div className="p-4 bg-white rounded-2xl shadow-sm text-slate-400">
+                        <div className={cn(
+                          "p-4 rounded-2xl shadow-sm transition-colors",
+                          focusedField === 'image_url' ? "bg-blue-600 text-white" : "bg-white text-slate-400"
+                        )}>
                           <UploadCloud className="w-10 h-10" />
                         </div>
-                        <p className="font-bold text-slate-400">Haz clic para subir la captura del ejercicio</p>
+                        <p className={cn(
+                          "font-bold transition-colors text-center",
+                          focusedField === 'image_url' ? "text-blue-600" : "text-slate-400"
+                        )}>
+                          {focusedField === 'image_url' ? '¡LISTO! Presiona Ctrl + V para PEGAR' : 'Haz clic aquí para habilitar PEGAR (Ctrl+V)'}
+                        </p>
                       </>
                     )}
-                  </label>
+                  </div>
                   {formData.image_url && (
                     <button 
                       type="button"
                       onClick={() => setFormData({...formData, image_url: ''})}
                       className="text-rose-500 font-bold text-sm hover:underline"
                     >
-                      Quitar imagen
+                      Quitar imagen del enunciado
                     </button>
                   )}
                 </div>
@@ -709,8 +732,65 @@ export const AdminPage: React.FC = () => {
                   placeholder="Justifica la respuesta..."
                   value={formData.explicacion}
                   onChange={(e) => setFormData({...formData, explicacion: e.target.value})}
-                  className="w-full px-8 py-6 rounded-[2rem] border-2 border-slate-50 bg-slate-50 outline-none focus:bg-white focus:border-blue-600 transition-all font-medium text-slate-600"
+                  className="w-full px-8 py-6 rounded-[2rem] border-2 border-slate-50 bg-slate-50 outline-none focus:bg-white focus:border-blue-600 transition-all font-medium text-slate-600 mb-4"
                 />
+
+                <div className="space-y-4">
+                  <label className="text-sm font-black text-slate-400 uppercase tracking-widest pl-2">Imagen de la Solución (Opcional)</label>
+                  <div className="flex flex-col gap-4">
+                    <input 
+                      type="file" 
+                      accept="image/*"
+                      onChange={(e) => handleImageUpload(e, 'explanation_image_url')}
+                      className="hidden"
+                      id="explanation-image-upload"
+                    />
+                    <div 
+                      onClick={() => setFocusedField('explanation_image_url')}
+                      onBlur={() => setFocusedField(null)}
+                      tabIndex={0}
+                      className={cn(
+                        "flex flex-col items-center justify-center gap-4 p-10 border-4 border-dashed rounded-[2.5rem] transition-all cursor-pointer group outline-none",
+                        focusedField === 'explanation_image_url' 
+                          ? "border-emerald-600 bg-emerald-50 shadow-inner" 
+                          : "border-slate-100 bg-slate-50 hover:bg-white hover:border-blue-100"
+                      )}
+                    >
+                      {formData.explanation_image_url ? (
+                        <div className="relative w-full aspect-video">
+                          <img src={formData.explanation_image_url} alt="Solution Preview" className="w-full h-full object-contain rounded-2xl" />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all rounded-2xl">
+                            <span className="text-white font-black">Cambiar Imagen</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className={cn(
+                            "p-4 rounded-2xl shadow-sm transition-colors",
+                            focusedField === 'explanation_image_url' ? "bg-emerald-600 text-white" : "bg-white text-slate-400"
+                          )}>
+                            <UploadCloud className="w-10 h-10" />
+                          </div>
+                          <p className={cn(
+                            "font-bold transition-colors text-center",
+                            focusedField === 'explanation_image_url' ? "text-emerald-600" : "text-slate-400"
+                          )}>
+                            {focusedField === 'explanation_image_url' ? '¡LISTO! Presiona Ctrl + V para PEGAR' : 'Haz clic aquí para habilitar PEGAR SOLUCIÓN (Ctrl+V)'}
+                          </p>
+                        </>
+                      )}
+                    </div>
+                    {formData.explanation_image_url && (
+                      <button 
+                        type="button"
+                        onClick={() => setFormData({...formData, explanation_image_url: ''})}
+                        className="text-rose-500 font-bold text-sm hover:underline"
+                      >
+                        Quitar imagen de la solución
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
 
               <div className="flex gap-4 pt-8">
