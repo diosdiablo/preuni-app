@@ -308,9 +308,9 @@ export const ExercisesPage: React.FC = () => {
           <motion.div 
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="relative bg-white w-full max-w-3xl rounded-[3rem] shadow-2xl overflow-hidden"
+            className="relative bg-white w-full max-w-3xl rounded-[3rem] shadow-2xl flex flex-col max-h-[90vh]"
           >
-            <div className="p-10 md:p-14">
+            <div className="p-10 md:p-14 overflow-y-auto flex-1">
               <div className="flex items-center justify-between mb-10">
                 <div className="flex items-center gap-3">
                   <div className={cn("w-3 h-3 rounded-full", areaColors[activeExercise.area])} />
