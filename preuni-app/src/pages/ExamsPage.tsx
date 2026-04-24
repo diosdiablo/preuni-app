@@ -537,9 +537,20 @@ export const ExamsPage: React.FC = () => {
                    )}
                 </div>
                 <p className="text-xl font-bold text-slate-800">{ex.enunciado}</p>
-                <div className="p-6 bg-slate-50 rounded-2xl border-l-4 border-indigo-500 italic text-slate-600">
-                  <span className="font-black text-indigo-600 block mb-1 not-italic uppercase text-xs">Explicación:</span>
-                  {ex.explicacion}
+                <div className="p-6 bg-slate-50 rounded-2xl border-l-4 border-indigo-500 italic text-slate-600 space-y-4">
+                  <div>
+                    <span className="font-black text-indigo-600 block mb-1 not-italic uppercase text-xs">Explicación:</span>
+                    {ex.explicacion}
+                  </div>
+                  {ex.explanation_image_url && (
+                    <div className="bg-white p-4 rounded-2xl border border-indigo-100 shadow-sm">
+                      <img 
+                        src={ex.explanation_image_url} 
+                        alt="Desarrollo de la solución" 
+                        className="w-full h-auto max-h-[300px] object-contain rounded-xl"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

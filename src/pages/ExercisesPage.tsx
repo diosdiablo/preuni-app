@@ -382,9 +382,18 @@ export const ExercisesPage: React.FC = () => {
                         <Info className="w-6 h-6 text-indigo-600" />
                         <h4 className="text-xl font-black text-indigo-900">Explicación del Concepto</h4>
                       </div>
-                      <p className="text-indigo-800/80 leading-relaxed font-medium text-lg">
+                      <p className="text-indigo-800/80 leading-relaxed font-medium text-lg mb-6">
                         {activeExercise.explicacion}
                       </p>
+                      {activeExercise.explanation_image_url && (
+                        <div className="mb-8 bg-white p-4 rounded-[2rem] border border-indigo-200 shadow-sm">
+                          <img 
+                            src={activeExercise.explanation_image_url} 
+                            alt="Solución detallada" 
+                            className="w-full h-auto max-h-[350px] object-contain rounded-xl"
+                          />
+                        </div>
+                      )}
                       <button 
                         onClick={closeModal}
                         className="mt-8 w-full py-5 bg-indigo-600 text-white font-black rounded-3xl shadow-xl shadow-indigo-200 hover:scale-105 active:scale-95 transition-all text-xl"
