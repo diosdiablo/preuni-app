@@ -629,8 +629,6 @@ export const ExamsPage: React.FC = () => {
             ))}
           </div>
         </div>
-        )}
-
       </div>
     );
   }
