@@ -63,12 +63,27 @@ export const DashboardPage: React.FC = () => {
         'Inglés': '#8b5cf6'
       };
 
-      const areaStats = areas.map(area => ({
-        area: area.split(' ')[0],
-        full: area,
-        value: 40 + Math.floor(Math.random() * 50),
-        color: areaColors[area] || '#1a237e'
-      }));
+      // Fetch real practice stats joined with exercises
+      const { data: practiceData } = await supabase
+        .from('practice_stats')
+        .select('is_correct, exercise_id, exercises(area)')
+        .eq('user_id', user?.id);
+
+      const areaStats = areas.map(area => {
+        const areaAttempts = (practiceData || []).filter(
+          (s: any) => s.exercises?.area === area
+        );
+        const correct = areaAttempts.filter((s: any) => s.is_correct).length;
+        const value = areaAttempts.length > 0
+          ? Math.round((correct / areaAttempts.length) * 100)
+          : 0;
+        return {
+          area: area.split(' ')[0],
+          full: area,
+          value,
+          color: areaColors[area] || '#1a237e'
+        };
+      });
       setStats(areaStats);
 
     } catch (err) {
@@ -182,30 +197,38 @@ export const DashboardPage: React.FC = () => {
             <h3 className="text-2xl font-black text-slate-800">Camino al Éxito</h3>
           </div>
           <div className="flex-1 space-y-5">
-            {[...stats].sort((a,b) => b.value - a.value).map((s) => {
-              const level = getMasteryLevel(s.value);
-              return (
-                <div key={s.area} className="group p-5 rounded-[2rem] bg-slate-50 border border-slate-100/50 hover:bg-white hover:border-[#1a237e]/20 hover:shadow-xl transition-all">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="font-black text-slate-700">{s.area}</span>
-                    <span className={cn("text-[10px] font-black px-3 py-1 rounded-full uppercase border", level.color)}>
-                      {level.label}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="flex-1 h-3 bg-slate-200 rounded-full overflow-hidden shadow-inner">
-                      <motion.div 
-                        initial={{ width: 0 }}
-                        animate={{ width: `${s.value}%` }}
-                        className="h-full rounded-full transition-all duration-1000 shadow-sm" 
-                        style={{ backgroundColor: s.color }}
-                      />
+            {stats.every(s => s.value === 0) ? (
+              <div className="flex flex-col items-center justify-center h-full text-slate-300 py-10 text-center">
+                <Brain className="w-20 h-20 mb-4 opacity-20" />
+                <p className="font-bold text-slate-400">¡Aún no hay datos!</p>
+                <p className="text-sm text-slate-400 mt-1">Practica ejercicios para ver tu progreso.</p>
+              </div>
+            ) : (
+              [...stats].sort((a,b) => b.value - a.value).map((s) => {
+                const level = getMasteryLevel(s.value);
+                return (
+                  <div key={s.area} className="group p-5 rounded-[2rem] bg-slate-50 border border-slate-100/50 hover:bg-white hover:border-[#1a237e]/20 hover:shadow-xl transition-all">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="font-black text-slate-700">{s.area}</span>
+                      <span className={cn("text-[10px] font-black px-3 py-1 rounded-full uppercase border", level.color)}>
+                        {level.label}
+                      </span>
                     </div>
-                    <span className="text-xs font-black text-slate-500">{s.value}%</span>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 h-3 bg-slate-200 rounded-full overflow-hidden shadow-inner">
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          animate={{ width: `${s.value}%` }}
+                          className="h-full rounded-full transition-all duration-1000 shadow-sm" 
+                          style={{ backgroundColor: s.color }}
+                        />
+                      </div>
+                      <span className="text-xs font-black text-slate-500">{s.value}%</span>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
       </div>
