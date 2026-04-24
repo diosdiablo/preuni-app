@@ -9,6 +9,7 @@ interface AuthContextType {
   profile: Profile | null;
   isAdmin: boolean;
   loading: boolean;
+  studentName: string;
   signOut: () => Promise<void>;
 }
 
@@ -19,6 +20,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [studentName, setStudentName] = useState<string>('');
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -42,6 +44,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const fetchStudentName = async (email: string) => {
+    try {
+      const dni = email.split('@')[0];
+      const { data } = await supabase.from('authorized_students').select('full_name').eq('dni', dni).single();
+      if (data?.full_name) {
+        setStudentName(data.full_name);
+      } else {
+        setStudentName('');
+      }
+    } catch (err) {
+      console.error('Error fetching student name:', err);
+      setStudentName('');
+    }
+  };
+
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -49,6 +66,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchProfile(session.user.id);
+        if (session.user.email) fetchStudentName(session.user.email);
       } else {
         setLoading(false);
       }
@@ -60,8 +78,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchProfile(session.user.id);
+        if (session.user.email) fetchStudentName(session.user.email);
       } else {
         setProfile(null);
+        setStudentName('');
       }
       setLoading(false);
     });
@@ -80,6 +100,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       profile, 
       isAdmin: !!profile?.is_admin || user?.email === 'jm8270@gmail.com', 
       loading, 
+      studentName,
       signOut 
     }}>
       {children}

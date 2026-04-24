@@ -8,25 +8,14 @@ import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const AppLayout: React.FC = () => {
-  const { user, isAdmin, signOut } = useAuth();
+  const { user, isAdmin, studentName, signOut } = useAuth();
   const { examInProgress } = useExam();
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
   const [showPasswordModal, setShowPasswordModal] = React.useState(false);
   const [newPassword, setNewPassword] = React.useState('');
   const [isChanging, setIsChanging] = React.useState(false);
   const [msg, setMsg] = React.useState<{ type: 'success' | 'error', text: string } | null>(null);
-  const [studentName, setStudentName] = React.useState<string>('');
   const location = useLocation();
-
-  useEffect(() => {
-    const fetchStudentName = async () => {
-      if (!user?.email || isAdmin) return;
-      const dni = user.email.split('@')[0];
-      const { data } = await supabase.from('authorized_students').select('full_name').eq('dni', dni).single();
-      if (data?.full_name) setStudentName(data.full_name);
-    };
-    fetchStudentName();
-  }, [user, isAdmin]);
 
   const navItems = [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/', color: 'blue' },
@@ -127,13 +116,15 @@ export const AppLayout: React.FC = () => {
                   </div>
                 </div>
               </div>
-              <button
-                onClick={() => setShowPasswordModal(true)}
-                className="w-full flex items-center justify-center gap-2 py-3 mb-2 rounded-2xl bg-white text-blue-600 font-bold text-sm border border-blue-100 hover:bg-blue-50 transition-all"
-              >
-                <KeyRound className="w-4 h-4" />
-                Cambiar clave
-              </button>
+              {isAdmin && (
+                <button
+                  onClick={() => setShowPasswordModal(true)}
+                  className="w-full flex items-center justify-center gap-2 py-3 mb-2 rounded-2xl bg-white text-blue-600 font-bold text-sm border border-blue-100 hover:bg-blue-50 transition-all"
+                >
+                  <KeyRound className="w-4 h-4" />
+                  Cambiar clave
+                </button>
+              )}
               <button
                 onClick={signOut}
                 className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-white text-slate-600 font-bold text-sm border border-slate-200 hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-all"
