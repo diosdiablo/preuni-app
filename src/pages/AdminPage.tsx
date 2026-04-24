@@ -695,14 +695,48 @@ export const AdminPage: React.FC = () => {
                 />
               </div>
 
-              <div className="flex gap-4 pt-6">
-                <button
-                  type="submit"
-                  className="flex-1 py-6 bg-blue-600 text-white font-black rounded-[2rem] shadow-2xl shadow-blue-200 hover:scale-[1.02] active:scale-95 transition-all text-xl flex items-center justify-center gap-3"
+              <div className="flex gap-4 pt-8">
+                <button 
+                  type="submit" 
+                  className="flex-1 py-5 bg-blue-600 text-white font-black rounded-[2rem] shadow-xl shadow-blue-100 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 text-lg"
                 >
                   <Save className="w-6 h-6" />
-                  {editingId ? 'Guardar Cambios' : 'Crear Pregunta'}
+                  {editingId ? 'Actualizar Ejercicio' : 'Crear Pregunta'}
                 </button>
+
+                {editingId && (
+                  <button 
+                    type="button"
+                    onClick={() => handleDelete(editingId)}
+                    className="px-8 py-5 bg-rose-50 text-rose-600 font-black rounded-[2rem] hover:bg-rose-600 hover:text-white transition-all flex items-center justify-center gap-3 border-2 border-rose-100"
+                  >
+                    <Trash2 className="w-6 h-6" />
+                    Eliminar
+                  </button>
+                )}
+
+                {editingId && (
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      setEditingId(null);
+                      setFormData({
+                        area: 'Ciencia',
+                        subarea: '',
+                        dificultad: 'Medio',
+                        enunciado: '',
+                        opciones: ['', '', '', '', ''],
+                        respuesta_correcta: 0,
+                        explicacion: '',
+                        image_url: ''
+                      });
+                      setActiveTab('list');
+                    }}
+                    className="px-8 py-5 bg-slate-50 text-slate-500 font-black rounded-[2rem] hover:bg-slate-200 transition-all"
+                  >
+                    Cancelar
+                  </button>
+                )}
               </div>
             </form>
           </motion.div>
