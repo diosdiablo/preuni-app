@@ -88,22 +88,30 @@ export const ExamsPage: React.FC = () => {
     difficulty: 'All' as Dificultad | 'All'
   });
 
-  // Block browser close/refresh during exam
+  // Use a ref so the beforeunload handler always reads the latest value
+  const examActiveRef = React.useRef(false);
+
+  // Block browser close/refresh during exam using a ref to avoid stale closure
   useEffect(() => {
-    if (step !== 'exam') return;
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (!examActiveRef.current) return;
       e.preventDefault();
-      e.returnValue = '¿Seguro que quieres salir? El simulacro se perderá y no se guardará ningún resultado.';
-      return e.returnValue;
+      // Chrome requires returnValue to be set (custom text is ignored by browser)
+      e.returnValue = '';
+      return '';
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [step]);
+  }, []); // mount once only
 
-  // Sync exam status with context
+  // Sync exam status with both ref and context
   useEffect(() => {
+    examActiveRef.current = step === 'exam';
     setExamInProgress(step === 'exam');
-    return () => setExamInProgress(false);
+    return () => {
+      examActiveRef.current = false;
+      setExamInProgress(false);
+    };
   }, [step]);
 
   useEffect(() => {
