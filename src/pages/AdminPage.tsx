@@ -249,7 +249,25 @@ export const AdminPage: React.FC = () => {
     try {
       const { error } = await supabase.from('exercises').delete().eq('id', id);
       if (error) throw error;
+      
       alert('Ejercicio eliminado correctamente');
+      
+      // If we were editing this specific exercise, reset and redirect
+      if (id === editingId) {
+        setEditingId(null);
+        setFormData({
+          area: 'Ciencia',
+          subarea: '',
+          dificultad: 'Medio',
+          enunciado: '',
+          opciones: ['', '', '', '', ''],
+          respuesta_correcta: 0,
+          explicacion: '',
+          image_url: ''
+        });
+        setActiveTab('list');
+      }
+      
       fetchExercises();
     } catch (err: any) {
       alert('Error al eliminar: ' + err.message);
