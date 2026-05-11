@@ -54,10 +54,10 @@ export const DashboardPage: React.FC = () => {
         .order('created_at', { ascending: false });
       setExams(examsData || []);
 
-      const areas: Area[] = ['Matemáticas', 'Ciencia', 'Comunicación', 'Ciencias Sociales', 'Inglés'];
+      const areas: Area[] = ['Matemáticas', 'Ciencias', 'Comunicación', 'Ciencias Sociales', 'Inglés'];
       const areaColors: Record<string, string> = {
         'Matemáticas': '#3b82f6',
-        'Ciencia': '#10b981',
+        'Ciencias': '#10b981',
         'Comunicación': '#f43f5e',
         'Ciencias Sociales': '#f59e0b',
         'Inglés': '#8b5cf6'
@@ -78,7 +78,7 @@ export const DashboardPage: React.FC = () => {
           ? Math.round((correct / areaAttempts.length) * 100)
           : 0;
         return {
-          area: area.split(' ')[0],
+          area: area,
           full: area,
           value,
           color: areaColors[area] || '#1a237e'

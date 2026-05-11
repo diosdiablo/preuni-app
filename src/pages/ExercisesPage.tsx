@@ -30,7 +30,7 @@ export const ExercisesPage: React.FC = () => {
   const areas: (Area | 'All')[] = [
     'All', 
     'Matemáticas', 
-    'Ciencia',
+    'Ciencias',
     'Comunicación',
     'Ciencias Sociales', 
     'Inglés'
@@ -38,7 +38,7 @@ export const ExercisesPage: React.FC = () => {
 
   const areaColors: Record<string, string> = {
     'Matemáticas': 'bg-blue-500',
-    'Ciencia': 'bg-emerald-500',
+    'Ciencias': 'bg-emerald-500',
     'Comunicación': 'bg-rose-500',
     'Ciencias Sociales': 'bg-amber-500',
     'Inglés': 'bg-violet-500',

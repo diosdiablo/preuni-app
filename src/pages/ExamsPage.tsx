@@ -41,7 +41,7 @@ const BLOCKS: BlockConfig[] = [
     description: 'Medicina, Farmacia, Odontología',
     icon: Stethoscope,
     color: 'emerald',
-    distribution: { 'Ciencia': 50, 'Comunicación': 35, 'Matemáticas': 15 }
+    distribution: { 'Ciencias': 50, 'Comunicación': 35, 'Matemáticas': 15 }
   },
   {
     id: 'B',
@@ -49,7 +49,7 @@ const BLOCKS: BlockConfig[] = [
     description: 'Sistemas, Civil, Mecánica',
     icon: Cpu,
     color: 'blue',
-    distribution: { 'Matemáticas': 50, 'Ciencia': 35, 'Comunicación': 15 }
+    distribution: { 'Matemáticas': 50, 'Ciencias': 35, 'Comunicación': 15 }
   },
   {
     id: 'C',

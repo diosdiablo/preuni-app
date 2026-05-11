@@ -1,7 +1,7 @@
 export type Area = 
   | 'Matemáticas' 
   | 'Comunicación' 
-  | 'Ciencia'
+  | 'Ciencias'
   | 'Ciencias Sociales' 
   | 'Inglés';
 

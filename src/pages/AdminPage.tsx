@@ -36,7 +36,7 @@ export const AdminPage: React.FC = () => {
   // Exercise Form state
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<Exercise>>({
-    area: 'Ciencia',
+    area: 'Ciencias',
     subarea: '',
     dificultad: 'Medio',
     enunciado: '',
@@ -197,7 +197,7 @@ export const AdminPage: React.FC = () => {
       }
       
       setFormData({
-        area: 'Ciencia',
+        area: 'Ciencias',
         subarea: '',
         dificultad: 'Medio',
         enunciado: '',
@@ -235,7 +235,7 @@ export const AdminPage: React.FC = () => {
   const copyTemplate = () => {
     const template = `[
   {
-    "area": "Ciencia",
+    "area": "Ciencias",
     "subarea": "Química",
     "dificultad": "Medio",
     "enunciado": "La radiactividad es la emisión espontánea de radiaciones de núcleos de átomos...",
@@ -261,7 +261,7 @@ export const AdminPage: React.FC = () => {
       if (id === editingId) {
         setEditingId(null);
         setFormData({
-          area: 'Ciencia',
+          area: 'Ciencias',
           subarea: '',
           dificultad: 'Medio',
           enunciado: '',
@@ -344,7 +344,7 @@ export const AdminPage: React.FC = () => {
             setActiveTab('create');
             setEditingId(null);
             setFormData({
-              area: 'Ciencia',
+              area: 'Ciencias',
               subarea: '',
               dificultad: 'Medio',
               enunciado: '',
@@ -522,7 +522,7 @@ export const AdminPage: React.FC = () => {
                     onChange={(e) => setFormData({...formData, area: e.target.value as any})}
                     className="w-full px-6 py-4 rounded-2xl border-2 border-slate-50 bg-slate-50 outline-none focus:bg-white focus:border-blue-600 transition-all font-bold"
                   >
-                    {['Matemáticas', 'Ciencia', 'Comunicación', 'Ciencias Sociales', 'Inglés'].map(a => (
+                    {['Matemáticas', 'Ciencias', 'Comunicación', 'Ciencias Sociales', 'Inglés'].map(a => (
                       <option key={a} value={a}>{a}</option>
                     ))}
                   </select>
@@ -819,7 +819,7 @@ export const AdminPage: React.FC = () => {
                     onClick={() => {
                       setEditingId(null);
                       setFormData({
-                        area: 'Ciencia',
+                        area: 'Ciencias',
                         subarea: '',
                         dificultad: 'Medio',
                         enunciado: '',
@@ -888,7 +888,7 @@ export const AdminPage: React.FC = () => {
                 <div className="p-6 bg-black/20 rounded-2xl font-mono text-[10px] opacity-80 overflow-hidden">
                   <pre>{`[
   {
-    "area": "Ciencia",
+    "area": "Ciencias",
     "subarea": "Química",
     "dificultad": "Fácil",
     "enunciado": "La radiactividad...",
