@@ -332,10 +332,10 @@ export const ExamsPage: React.FC = () => {
               key={block.id}
               onClick={() => setSettings({...settings, blockId: block.id})}
               className={cn(
-                "p-8 text-left space-y-6 transition-all rounded-[2rem] border-4",
+                "card-premium p-8 text-left space-y-6 transition-all border-4",
                 settings.blockId === block.id 
-                  ? "bg-blue-600 text-white border-blue-600 shadow-2xl shadow-blue-200 scale-105" 
-                  : "bg-white text-slate-800 border-transparent opacity-80 hover:opacity-100 hover:border-blue-200"
+                  ? "!bg-blue-600 !text-white border-blue-600 shadow-2xl shadow-blue-200 scale-105" 
+                  : "border-transparent opacity-80 hover:opacity-100 hover:border-blue-200"
               )}
             >
               <div className={cn(
