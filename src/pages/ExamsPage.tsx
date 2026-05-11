@@ -332,25 +332,27 @@ export const ExamsPage: React.FC = () => {
               key={block.id}
               onClick={() => setSettings({...settings, blockId: block.id})}
               className={cn(
-                "card-premium p-8 text-left space-y-6 transition-all border-4",
+                "p-8 text-left space-y-6 transition-all rounded-[2rem] border-4",
                 settings.blockId === block.id 
-                  ? "border-blue-500 shadow-2xl shadow-blue-100 scale-105" 
-                  : "border-transparent opacity-80 hover:opacity-100"
+                  ? "bg-blue-600 text-white border-blue-600 shadow-2xl shadow-blue-200 scale-105" 
+                  : "bg-white text-slate-800 border-transparent opacity-80 hover:opacity-100 hover:border-blue-200"
               )}
             >
               <div className={cn(
                 "w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg",
-                block.id === 'A' ? "bg-emerald-500 text-white" :
-                block.id === 'B' ? "bg-blue-500 text-white" :
-                block.id === 'C' ? "bg-rose-500 text-white" : "bg-amber-500 text-white"
+                settings.blockId === block.id 
+                  ? "bg-white/20 text-white" 
+                  : block.id === 'A' ? "bg-emerald-500 text-white" :
+                    block.id === 'B' ? "bg-blue-500 text-white" :
+                    block.id === 'C' ? "bg-rose-500 text-white" : "bg-amber-500 text-white"
               )}>
                 <block.icon className="w-8 h-8" />
               </div>
               <div>
-                <h4 className="text-2xl font-black text-slate-800">Bloque {block.id}</h4>
-                <p className="font-bold text-slate-600">{block.name}</p>
+                <h4 className={cn("text-2xl font-black", settings.blockId === block.id ? "text-white" : "text-slate-800")}>Bloque {block.id}</h4>
+                <p className={cn("font-bold", settings.blockId === block.id ? "text-blue-100" : "text-slate-600")}>{block.name}</p>
               </div>
-              <p className="text-sm text-slate-400 font-medium">{block.description}</p>
+              <p className={cn("text-sm font-medium", settings.blockId === block.id ? "text-blue-100" : "text-slate-400")}>{block.description}</p>
             </button>
           ))}
         </div>
