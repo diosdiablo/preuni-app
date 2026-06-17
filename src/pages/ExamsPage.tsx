@@ -51,7 +51,7 @@ function saveUsedIds(userId: string, ids: Set<string>) {
   sessionStorage.setItem(getUsedKey(userId), JSON.stringify([...ids]));
 }
 
-type BlockId = 'A' | 'B' | 'C' | 'D';
+type BlockId = 'A' | 'B' | 'C' | 'D' | 'G';
 
 interface BlockConfig {
   id: BlockId;
