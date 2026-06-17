@@ -1,22 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
-import type { Exercise, Dificultad } from '@/types';
+import type { Exercise, Dificultad, PendingRegistration } from '@/types';
 import { 
-  Plus, 
-  Trash2, 
-  Edit3, 
-  Search, 
-  Save, 
-  AlertCircle,
-  LayoutGrid,
-  UploadCloud,
-  FileCode,
-  Copy,
-  CheckCircle2,
-  Users,
-  UserPlus,
-  ShieldCheck
+   Plus, 
+   Trash2, 
+   Edit3, 
+   Search, 
+   Save, 
+   AlertCircle,
+   LayoutGrid,
+   UploadCloud,
+   FileCode,
+   Copy,
+   CheckCircle2,
+   Users,
+   UserPlus,
+   ShieldCheck,
+   Clock,
+   XCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -25,6 +27,7 @@ export const AdminPage: React.FC = () => {
   const { isAdmin } = useAuth();
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [students, setStudents] = useState<any[]>([]);
+  const [pendingRegistrations, setPendingRegistrations] = useState<PendingRegistration[]>([]);
   const [activeTab, setActiveTab] = useState<'list' | 'create' | 'bulk' | 'students'>('list');
   const [search, setSearch] = useState('');
   const [copySuccess, setCopySuccess] = useState(false);
@@ -56,6 +59,7 @@ export const AdminPage: React.FC = () => {
     if (isAdmin) {
       fetchExercises();
       fetchStudents();
+      fetchPendingRegistrations();
     }
   }, [isAdmin]);
 
@@ -144,6 +148,53 @@ export const AdminPage: React.FC = () => {
       .select('*')
       .order('created_at', { ascending: false });
     setStudents(data || []);
+  };
+
+  const fetchPendingRegistrations = async () => {
+    const { data } = await supabase
+      .from('pending_registrations')
+      .select('*')
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false });
+    setPendingRegistrations(data || []);
+  };
+
+  const handleApproveRegistration = async (reg: PendingRegistration) => {
+    try {
+      const fullName = `${reg.nombres} ${reg.apellidos}`;
+      
+      const { error: authError } = await supabase
+        .from('authorized_students')
+        .insert([{ dni: reg.dni, full_name: fullName }]);
+      if (authError) throw authError;
+
+      const { error: updateError } = await supabase
+        .from('pending_registrations')
+        .update({ status: 'approved' })
+        .eq('id', reg.id);
+      if (updateError) throw updateError;
+
+      alert('Alumno aprobado correctamente. Ya puede iniciar sesión con su DNI.');
+      fetchPendingRegistrations();
+      fetchStudents();
+    } catch (err: any) {
+      alert('Error: ' + err.message);
+    }
+  };
+
+  const handleRejectRegistration = async (reg: PendingRegistration) => {
+    try {
+      const { error } = await supabase
+        .from('pending_registrations')
+        .update({ status: 'rejected' })
+        .eq('id', reg.id);
+      if (error) throw error;
+
+      alert('Solicitud rechazada.');
+      fetchPendingRegistrations();
+    } catch (err: any) {
+      alert('Error: ' + err.message);
+    }
   };
 
   const handleAddStudent = async (e: React.FormEvent) => {
@@ -384,6 +435,51 @@ export const AdminPage: React.FC = () => {
             exit={{ opacity: 0, y: -20 }}
             className="space-y-8"
           >
+            {pendingRegistrations.length > 0 && (
+              <div className="card-premium p-10 space-y-8 border-2 border-amber-200">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-amber-100 rounded-2xl">
+                    <Clock className="w-6 h-6 text-amber-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-black text-slate-800">Solicitudes Pendientes ({pendingRegistrations.length})</h3>
+                    <p className="text-sm font-medium text-slate-400">Estos alumnos esperan tu aprobación para acceder al sistema.</p>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  {pendingRegistrations.map(reg => (
+                    <div key={reg.id} className="flex items-center justify-between p-6 bg-amber-50/50 rounded-2xl border border-amber-100">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center font-black text-amber-600 border border-amber-200">
+                          {reg.nombres[0]}{reg.apellidos[0]}
+                        </div>
+                        <div>
+                          <p className="font-black text-slate-800">{reg.nombres} {reg.apellidos}</p>
+                          <p className="text-xs font-bold text-slate-400">DNI: {reg.dni} — {new Date(reg.created_at).toLocaleDateString('es-PE')}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleApproveRegistration(reg)}
+                          className="p-3 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-100"
+                          title="Aprobar"
+                        >
+                          <CheckCircle2 className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => handleRejectRegistration(reg)}
+                          className="p-3 bg-rose-100 text-rose-600 rounded-xl hover:bg-rose-200 transition-all"
+                          title="Rechazar"
+                        >
+                          <XCircle className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-1 card-premium p-10 space-y-8">
                  <h3 className="text-2xl font-black text-slate-800 flex items-center gap-3">

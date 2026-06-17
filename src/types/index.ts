@@ -54,3 +54,12 @@ export interface ExamAnswer {
   user_answer: number | null;
   is_correct: boolean;
 }
+
+export interface PendingRegistration {
+  id: string;
+  nombres: string;
+  apellidos: string;
+  dni: string;
+  status: 'pending' | 'approved' | 'rejected';
+  created_at: string;
+}

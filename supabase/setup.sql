@@ -137,7 +137,35 @@ CREATE OR REPLACE TRIGGER on_auth_user_created
   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
 
 -- ==========================================
--- 5. SEED: 30 Ejercicios de Muestra
+-- 5. TABLA DE SOLICITUDES DE REGISTRO
+-- ==========================================
+
+CREATE TABLE public.pending_registrations (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  nombres TEXT NOT NULL,
+  apellidos TEXT NOT NULL,
+  dni TEXT NOT NULL UNIQUE,
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE public.pending_registrations ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can insert pending registrations"
+  ON public.pending_registrations FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Admins can view pending registrations"
+  ON public.pending_registrations FOR SELECT USING (
+    auth.jwt() ->> 'email' = 'jm8270@gmail.com'
+  );
+
+CREATE POLICY "Admins can update pending registrations"
+  ON public.pending_registrations FOR UPDATE USING (
+    auth.jwt() ->> 'email' = 'jm8270@gmail.com'
+  );
+
+-- ==========================================
+-- 6. SEED: 30 Ejercicios de Muestra
 -- ==========================================
 
 INSERT INTO public.exercises (area, subarea, dificultad, enunciado, opciones, respuesta_correcta, explicacion) VALUES
