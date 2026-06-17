@@ -17,11 +17,39 @@ import {
   Cpu,
   Gavel,
   BadgeDollarSign,
-  Loader2
+  Loader2,
+  Globe
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
+
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+
+function getUsedKey(userId: string) {
+  return `preuni_used_questions_${userId}`;
+}
+
+function getUsedIds(userId: string): Set<string> {
+  try {
+    const raw = sessionStorage.getItem(getUsedKey(userId));
+    return raw ? new Set(JSON.parse(raw)) : new Set();
+  } catch {
+    return new Set();
+  }
+}
+
+function saveUsedIds(userId: string, ids: Set<string>) {
+  sessionStorage.setItem(getUsedKey(userId), JSON.stringify([...ids]));
+}
 
 type BlockId = 'A' | 'B' | 'C' | 'D';
 
@@ -66,6 +94,14 @@ const BLOCKS: BlockConfig[] = [
     icon: BadgeDollarSign,
     color: 'amber',
     distribution: { 'Matemáticas': 45, 'Ciencias Sociales': 20, 'Comunicación': 35 }
+  },
+  {
+    id: 'G',
+    name: 'General',
+    description: 'Todas las áreas (simulacro completo)',
+    icon: Globe,
+    color: 'indigo',
+    distribution: { 'Matemáticas': 20, 'Comunicación': 20, 'Ciencias': 20, 'Ciencias Sociales': 20, 'Inglés': 20 }
   }
 ];
 
@@ -129,23 +165,21 @@ export const ExamsPage: React.FC = () => {
   const startExam = async () => {
     setLoading(true);
     const selectedBlock = BLOCKS.find(b => b.id === settings.blockId)!;
-    let allQuestions: Exercise[] = [];
 
     try {
       const areaList = Object.keys(selectedBlock.distribution);
-      
-      // Fetch all potential questions for the selected areas
-      const { data: allPossibleQuestions } = await supabase
+
+      const { data: allQuestions } = await supabase
         .from('exercises')
         .select('*');
 
-      if (!allPossibleQuestions) return;
+      if (!allQuestions) return;
 
-      // Filter by area/subarea and difficulty in JS for maximum reliability
-      const pool = allPossibleQuestions.filter(ex => {
-        const matchesArea = areaList.includes(ex.area) || areaList.includes(ex.subarea);
+      const usedIds = user ? getUsedIds(user.id) : new Set<string>();
+
+      const pool = allQuestions.filter(ex => {
+        const matchesArea = areaList.includes(ex.area);
         if (!matchesArea) return false;
-
         if (settings.difficulty !== 'All') {
           return (
             ex.dificultad === settings.difficulty || 
@@ -156,20 +190,27 @@ export const ExamsPage: React.FC = () => {
         return true;
       });
 
-      // Distribute questions according to block config
-      let finalSelection: Exercise[] = [];
-      for (const [area, percentage] of Object.entries(selectedBlock.distribution)) {
-        const countForArea = Math.ceil((settings.count * (percentage as number)) / 100);
-        const areaPool = pool.filter(ex => ex.area === area || ex.subarea === area)
-                            .sort(() => Math.random() - 0.5);
-        
-        finalSelection = [...finalSelection, ...areaPool.slice(0, countForArea)];
+      const unusedPool = pool.filter(ex => !usedIds.has(ex.id));
+      const effectivePool = unusedPool.length >= settings.count ? unusedPool : pool;
+      const shuffled = shuffle(effectivePool);
+
+      const areaWeights = Object.entries(selectedBlock.distribution);
+      const selection: Exercise[] = [];
+
+      for (const [area, pct] of areaWeights) {
+        const target = Math.round((settings.count * (pct as number)) / 100);
+        const fromArea = shuffled.filter(ex => ex.area === area);
+        selection.push(...fromArea.slice(0, target));
       }
 
-      // Final shuffle and trim
-      allQuestions = finalSelection.sort(() => Math.random() - 0.5).slice(0, settings.count);
+      const finalSelection = shuffle(selection).slice(0, settings.count);
 
-      setExercises(allQuestions);
+      if (user) {
+        const newUsed = new Set([...usedIds, ...finalSelection.map(e => e.id)]);
+        saveUsedIds(user.id, newUsed);
+      }
+
+      setExercises(finalSelection);
       setStep('exam');
     } catch (err) {
       console.error(err);
@@ -342,9 +383,10 @@ export const ExamsPage: React.FC = () => {
                 "w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg",
                 settings.blockId === block.id 
                   ? "bg-white/20 text-white" 
-                  : block.id === 'A' ? "bg-emerald-500 text-white" :
+                  :                     block.id === 'A' ? "bg-emerald-500 text-white" :
                     block.id === 'B' ? "bg-blue-500 text-white" :
-                    block.id === 'C' ? "bg-rose-500 text-white" : "bg-amber-500 text-white"
+                    block.id === 'C' ? "bg-rose-500 text-white" :
+                    block.id === 'D' ? "bg-amber-500 text-white" : "bg-indigo-500 text-white"
               )}>
                 <block.icon className="w-8 h-8" />
               </div>
