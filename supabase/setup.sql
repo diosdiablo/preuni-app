@@ -165,7 +165,45 @@ CREATE POLICY "Admins can update pending registrations"
   );
 
 -- ==========================================
--- 6. SEED: 30 Ejercicios de Muestra
+-- 6. FUNCIÓN PARA INCREMENTAR PUNTOS
+-- ==========================================
+
+CREATE OR REPLACE FUNCTION public.increment_points(user_id UUID, amount INTEGER)
+RETURNS void AS $$
+BEGIN
+  UPDATE public.profiles
+  SET points = COALESCE(points, 0) + amount
+  WHERE id = user_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ==========================================
+-- 7. TABLA DE ESTUDIANTES AUTORIZADOS
+-- ==========================================
+
+CREATE TABLE IF NOT EXISTS public.authorized_students (
+  dni TEXT PRIMARY KEY,
+  full_name TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE public.authorized_students ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can view authorized students"
+  ON public.authorized_students FOR SELECT USING (true);
+
+CREATE POLICY "Admins can insert authorized students"
+  ON public.authorized_students FOR INSERT WITH CHECK (
+    auth.jwt() ->> 'email' = 'jm8270@gmail.com'
+  );
+
+CREATE POLICY "Admins can delete authorized students"
+  ON public.authorized_students FOR DELETE USING (
+    auth.jwt() ->> 'email' = 'jm8270@gmail.com'
+  );
+
+-- ==========================================
+-- 8. SEED: 30 Ejercicios de Muestra
 -- ==========================================
 
 INSERT INTO public.exercises (area, subarea, dificultad, enunciado, opciones, respuesta_correcta, explicacion) VALUES

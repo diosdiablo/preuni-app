@@ -46,12 +46,14 @@ export const DashboardPage: React.FC = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
+      if (!user?.id) return;
       
-      const { data: examsData } = await supabase
+      const { data: examsData, error: examsError } = await supabase
         .from('exams')
         .select('*')
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
+      if (examsError) console.error('Error fetching exams:', examsError);
       setExams(examsData || []);
 
       const areas: Area[] = ['Matemáticas', 'Ciencias', 'Comunicación', 'Ciencias Sociales', 'Inglés'];
@@ -64,10 +66,11 @@ export const DashboardPage: React.FC = () => {
       };
 
       // Fetch real practice stats joined with exercises
-      const { data: practiceData } = await supabase
+      const { data: practiceData, error: practiceError } = await supabase
         .from('practice_stats')
         .select('is_correct, exercise_id, exercises(area)')
-        .eq('user_id', user?.id);
+        .eq('user_id', user.id);
+      if (practiceError) console.error('Error fetching practice stats:', practiceError);
 
       const areaStats = areas.map(area => {
         const areaAttempts = (practiceData || []).filter(

@@ -238,29 +238,51 @@ export const ExamsPage: React.FC = () => {
 
     // Save to Supabase
     if (user) {
-      const { data: examData } = await supabase
-        .from('exams')
-        .insert([{
-          user_id: user.id,
-          score,
-          total_questions: exercises.length,
-          time_spent_seconds: time
-        }])
-        .select()
-        .single();
+      try {
+        const { data: examData, error: examError } = await supabase
+          .from('exams')
+          .insert([{
+            user_id: user.id,
+            score,
+            total_questions: exercises.length,
+            time_spent_seconds: time
+          }])
+          .select()
+          .single();
 
-      if (examData) {
-        const answers = exercises.map(ex => ({
-          exam_id: examData.id,
-          exercise_id: ex.id,
-          user_answer: userAnswers[ex.id] ?? null,
-          is_correct: userAnswers[ex.id] === ex.respuesta_correcta
-        }));
-        await supabase.from('exam_answers').insert(answers);
-        
-        // Reward points
-        const points = score * 10;
-        await supabase.rpc('increment_points', { user_id: user.id, amount: points });
+        if (examError) {
+          console.error('Error saving exam:', examError);
+          return;
+        }
+
+        if (examData) {
+          const answers = exercises.map(ex => ({
+            exam_id: examData.id,
+            exercise_id: ex.id,
+            user_answer: userAnswers[ex.id] ?? null,
+            is_correct: userAnswers[ex.id] === ex.respuesta_correcta
+          }));
+          const { error: answersError } = await supabase.from('exam_answers').insert(answers);
+          if (answersError) console.error('Error saving answers:', answersError);
+
+          // Reward points directly on profile
+          const points = score * 10;
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('points')
+            .eq('id', user.id)
+            .single();
+          if (profile) {
+            await supabase
+              .from('profiles')
+              .update({ points: (profile.points || 0) + points })
+              .eq('id', user.id);
+          } else {
+            console.warn('Profile not found to award points');
+          }
+        }
+      } catch (err) {
+        console.error('Error in finishExam:', err);
       }
     }
   };
