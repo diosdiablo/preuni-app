@@ -63,13 +63,16 @@ export const DashboardPage: React.FC = () => {
       }
       setExams(examsData || []);
 
-      const areas: Area[] = ['Matemáticas', 'Ciencias', 'Comunicación', 'Ciencias Sociales', 'Inglés'];
+      const areas: Area[] = ['Matemáticas', 'Ciencias', 'Ciencias Naturales', 'Comunicación', 'Ciencias Sociales', 'Inglés', 'Razonamiento Matemático', 'Razonamiento Verbal'];
       const areaColors: Record<string, string> = {
         'Matemáticas': '#3b82f6',
         'Ciencias': '#10b981',
+        'Ciencias Naturales': '#14b8a6',
         'Comunicación': '#f43f5e',
         'Ciencias Sociales': '#f59e0b',
-        'Inglés': '#8b5cf6'
+        'Inglés': '#8b5cf6',
+        'Razonamiento Matemático': '#0891b2',
+        'Razonamiento Verbal': '#db2777',
       };
 
       // Fetch practice stats — RLS filters by current user

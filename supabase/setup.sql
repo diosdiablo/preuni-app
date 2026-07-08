@@ -221,11 +221,11 @@ INSERT INTO public.exercises (area, subarea, dificultad, enunciado, opciones, re
 ('Comunicación', 'Semántica', 'Bajo', 'Un sinónimo de la palabra "Efímero" es:', '["Duradero", "Pasajero", "Eterno", "Pesado"]', 1, 'Efímero significa que dura poco tiempo, por lo que su sinónimo ideal es pasajero.'),
 ('Comunicación', 'Sintaxis', 'Alto', 'En la oración: "La niña compró caramelos para su hermano", ¿cuál es el Objeto Directo?', '["La niña", "compró", "caramelos", "para su hermano"]', 2, 'El Objeto Directo responde a "¿Qué compró?", en este caso, "caramelos".'),
 
--- Ciencias Naturales (4)
-('Ciencias Naturales', 'Biología', 'Bajo', '¿Cuál es el orgánulo celular encargado de la respiración y generación de energía?', '["Núcleo", "Ribosoma", "Mitocondria", "Aparato de Golgi"]', 2, 'Las mitocondrias son conocidas como las centrales energéticas de las células.'),
-('Ciencias Naturales', 'Química', 'Medio', '¿Cuál es el elemento químico más abundante en el universo?', '["Oxígeno", "Carbono", "Hidrógeno", "Helio"]', 2, 'El hidrógeno es el elemento más simple y abundante del universo, representando alrededor del 75% de su masa elemental.'),
-('Ciencias Naturales', 'Física', 'Medio', 'Según la segunda ley de Newton, la fuerza es igual a la masa multiplicada por:', '["La velocidad", "La gravedad", "La aceleración", "El tiempo"]', 2, 'La ecuación fundamental de la dinámica es F = m * a (Fuerza = masa * aceleración).'),
-('Ciencias Naturales', 'Ecología', 'Bajo', '¿Cómo se le llama a los organismos que fabrican su propio alimento?', '["Heterótrofos", "Autótrofos", "Descomponedores", "Parásitos"]', 1, 'Los autótrofos, como las plantas (a través de la fotosíntesis), producen su propio alimento.'),
+-- Ciencias (4)
+('Ciencias', 'Biología', 'Bajo', '¿Cuál es el orgánulo celular encargado de la respiración y generación de energía?', '["Núcleo", "Ribosoma", "Mitocondria", "Aparato de Golgi"]', 2, 'Las mitocondrias son conocidas como las centrales energéticas de las células.'),
+('Ciencias', 'Química', 'Medio', '¿Cuál es el elemento químico más abundante en el universo?', '["Oxígeno", "Carbono", "Hidrógeno", "Helio"]', 2, 'El hidrógeno es el elemento más simple y abundante del universo, representando alrededor del 75% de su masa elemental.'),
+('Ciencias', 'Física', 'Medio', 'Según la segunda ley de Newton, la fuerza es igual a la masa multiplicada por:', '["La velocidad", "La gravedad", "La aceleración", "El tiempo"]', 2, 'La ecuación fundamental de la dinámica es F = m * a (Fuerza = masa * aceleración).'),
+('Ciencias', 'Ecología', 'Bajo', '¿Cómo se le llama a los organismos que fabrican su propio alimento?', '["Heterótrofos", "Autótrofos", "Descomponedores", "Parásitos"]', 1, 'Los autótrofos, como las plantas (a través de la fotosíntesis), producen su propio alimento.'),
 
 -- Ciencias Sociales (4)
 ('Ciencias Sociales', 'Historia Universal', 'Medio', '¿En qué año comenzó la Primera Guerra Mundial?', '["1912", "1914", "1918", "1939"]', 1, 'Comenzó en 1914 tras el asesinato del archiduque Francisco Fernando.'),

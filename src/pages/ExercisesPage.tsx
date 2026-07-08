@@ -31,17 +31,23 @@ export const ExercisesPage: React.FC = () => {
     'All', 
     'Matemáticas', 
     'Ciencias',
+    'Ciencias Naturales',
     'Comunicación',
     'Ciencias Sociales', 
-    'Inglés'
+    'Inglés',
+    'Razonamiento Matemático',
+    'Razonamiento Verbal',
   ];
 
   const areaColors: Record<string, string> = {
     'Matemáticas': 'bg-blue-500',
     'Ciencias': 'bg-emerald-500',
+    'Ciencias Naturales': 'bg-teal-500',
     'Comunicación': 'bg-rose-500',
     'Ciencias Sociales': 'bg-amber-500',
     'Inglés': 'bg-violet-500',
+    'Razonamiento Matemático': 'bg-cyan-600',
+    'Razonamiento Verbal': 'bg-pink-600',
     'All': 'bg-indigo-600'
   };
 

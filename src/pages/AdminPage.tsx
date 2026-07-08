@@ -618,7 +618,7 @@ export const AdminPage: React.FC = () => {
                     onChange={(e) => setFormData({...formData, area: e.target.value as any})}
                     className="w-full px-6 py-4 rounded-2xl border-2 border-slate-50 bg-slate-50 outline-none focus:bg-white focus:border-blue-600 transition-all font-bold"
                   >
-                    {['Matemáticas', 'Ciencias', 'Comunicación', 'Ciencias Sociales', 'Inglés'].map(a => (
+                    {['Matemáticas', 'Ciencias', 'Ciencias Naturales', 'Comunicación', 'Ciencias Sociales', 'Inglés', 'Razonamiento Matemático', 'Razonamiento Verbal'].map(a => (
                       <option key={a} value={a}>{a}</option>
                     ))}
                   </select>

@@ -2,8 +2,11 @@ export type Area =
   | 'Matemáticas' 
   | 'Comunicación' 
   | 'Ciencias'
+  | 'Ciencias Naturales'
   | 'Ciencias Sociales' 
-  | 'Inglés';
+  | 'Inglés'
+  | 'Razonamiento Matemático'
+  | 'Razonamiento Verbal';
 
 export type Dificultad = 'Bajo' | 'Medio' | 'Alto' | 'Fácil' | 'Difícil';
 
