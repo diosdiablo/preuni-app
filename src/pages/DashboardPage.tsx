@@ -47,13 +47,20 @@ export const DashboardPage: React.FC = () => {
     try {
       setLoading(true);
       if (!user?.id) return;
-      
+
+      // Debug: log user info
+      console.log('Dashboard user.id:', user.id, 'user.email:', user.email);
+
+      // Fetch exams — rely on RLS to filter by user (no manual eq needed)
       const { data: examsData, error: examsError } = await supabase
         .from('exams')
         .select('*')
-        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
-      if (examsError) console.error('Error fetching exams:', examsError);
+      if (examsError) {
+        console.error('Error fetching exams:', examsError);
+      } else {
+        console.log('Exams found:', examsData?.length ?? 0);
+      }
       setExams(examsData || []);
 
       const areas: Area[] = ['Matemáticas', 'Ciencias', 'Comunicación', 'Ciencias Sociales', 'Inglés'];
