@@ -22,5 +22,6 @@
 - **Solución:** El bloque seleccionado ahora tiene fondo azul (`bg-blue-600`), texto blanco, icono semi-transparente y escala aumentada. Los no seleccionados mantienen fondo blanco con opacidad reducida.
 - **Archivo modificado:** `src/pages/ExamsPage.tsx`
 
-## DNI registrado
-- `40924833`
+## Contraseña del administrador
+- Email: `jm8270@gmail.com`
+- Contraseña: `40924833`
