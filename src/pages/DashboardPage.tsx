@@ -72,11 +72,10 @@ export const DashboardPage: React.FC = () => {
         'Inglés': '#8b5cf6'
       };
 
-      // Fetch practice stats from individual exercises
+      // Fetch practice stats — RLS filters by current user
       const { data: practiceData, error: practiceError } = await supabase
         .from('practice_stats')
-        .select('is_correct, exercise_id, exercises(area)')
-        .eq('user_id', user.id);
+        .select('is_correct, exercise_id, exercises(area)');
       if (practiceError) console.error('Error fetching practice stats:', practiceError);
 
       console.log('Total practice attempts:', practiceData?.length ?? 0);
