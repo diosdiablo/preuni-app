@@ -21,3 +21,6 @@
 - **Problema:** Al elegir un bloque en el simulacro, no se notaba claramente cuál estaba seleccionado.
 - **Solución:** El bloque seleccionado ahora tiene fondo azul (`bg-blue-600`), texto blanco, icono semi-transparente y escala aumentada. Los no seleccionados mantienen fondo blanco con opacidad reducida.
 - **Archivo modificado:** `src/pages/ExamsPage.tsx`
+
+## DNI registrado
+- `40924833`
