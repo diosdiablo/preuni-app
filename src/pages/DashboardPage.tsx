@@ -79,22 +79,10 @@ export const DashboardPage: React.FC = () => {
         .eq('user_id', user.id);
       if (practiceError) console.error('Error fetching practice stats:', practiceError);
 
-      // Also fetch exam answers (from simulacros) — RLS already filters to current user's exams
-      const { data: examAnswerData, error: examAnswerError } = await supabase
-        .from('exam_answers')
-        .select('is_correct, exercise_id, exercises(area)');
-      if (examAnswerError) console.error('Error fetching exam answers:', examAnswerError);
-
-      // Merge both sources into a single attempt list
-      const allAttempts = [
-        ...(practiceData || []),
-        ...(examAnswerData || []),
-      ];
-
-      console.log('Total area attempts:', allAttempts.length);
+      console.log('Total practice attempts:', practiceData?.length ?? 0);
 
       const areaStats = areas.map(area => {
-        const areaAttempts = allAttempts.filter(
+        const areaAttempts = (practiceData || []).filter(
           (s: any) => s.exercises?.area === area
         );
         const correct = areaAttempts.filter((s: any) => s.is_correct).length;
