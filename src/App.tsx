@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { ExamProvider } from '@/context/ExamContext';
+import { OfflineProvider } from '@/context/OfflineContext';
 import { AppLayout } from '@/layouts/AppLayout';
 import { AuthPage } from '@/pages/AuthPage';
 import { DashboardPage } from '@/pages/DashboardPage';
@@ -27,6 +28,7 @@ function App() {
   return (
     <AuthProvider>
       <ExamProvider>
+        <OfflineProvider>
         <BrowserRouter>
           <Routes>
             <Route path="/auth" element={<AuthPage />} />
@@ -46,6 +48,7 @@ function App() {
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </BrowserRouter>
+        </OfflineProvider>
       </ExamProvider>
     </AuthProvider>
   );

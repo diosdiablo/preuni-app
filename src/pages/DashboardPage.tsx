@@ -28,11 +28,14 @@ import {
   Line
 } from 'recharts';
 import { cn } from '@/lib/utils';
+import { useOffline } from '@/context/OfflineContext';
+import { getCache, setCache } from '@/lib/cache';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
 export const DashboardPage: React.FC = () => {
   const { user, isAdmin, profile: authProfile, studentName } = useAuth();
+  const { isOffline } = useOffline();
   const [exams, setExams] = useState<Exam[]>([]);
   const [stats, setStats] = useState<{area: string, value: number, color: string}[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,6 +51,14 @@ export const DashboardPage: React.FC = () => {
       setLoading(true);
       if (!user?.id) return;
 
+      if (isOffline) {
+        const cachedExams = getCache<Exam[]>('exams') || [];
+        setExams(cachedExams);
+        setStats(getCache('dashboardStats') || []);
+        setLoading(false);
+        return;
+      }
+
       // Debug: log user info
       console.log('Dashboard user.id:', user.id, 'user.email:', user.email);
 
@@ -62,6 +73,7 @@ export const DashboardPage: React.FC = () => {
         console.log('Exams found:', examsData?.length ?? 0);
       }
       setExams(examsData || []);
+      setCache('exams', examsData || [], 1440);
 
       const areas: Area[] = ['Matemáticas', 'Ciencias', 'Ciencias Naturales', 'Comunicación', 'Ciencias Sociales', 'Inglés', 'Razonamiento Matemático', 'Razonamiento Verbal'];
       const areaColors: Record<string, string> = {
@@ -99,6 +111,7 @@ export const DashboardPage: React.FC = () => {
         };
       });
       setStats(areaStats);
+      setCache('dashboardStats', areaStats, 1440);
 
     } catch (err) {
       console.error('Error fetching dashboard data:', err);

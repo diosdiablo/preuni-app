@@ -14,9 +14,12 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useOffline } from '@/context/OfflineContext';
+import { addToQueue } from '@/lib/cache';
 
 export const ExercisesPage: React.FC = () => {
   const { user } = useAuth();
+  const { isOffline, getCachedExercises } = useOffline();
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedArea, setSelectedArea] = useState<Area | 'All'>('All');
@@ -80,18 +83,22 @@ export const ExercisesPage: React.FC = () => {
 
   const fetchExercises = async () => {
     setLoading(true);
+
+    if (isOffline) {
+      const cached = getCachedExercises();
+      let filtered = cached;
+      if (selectedArea !== 'All') filtered = filtered.filter(e => e.area === selectedArea);
+      if (selectedSubarea !== 'All') filtered = filtered.filter(e => e.subarea === selectedSubarea);
+      if (selectedDifficulty !== 'All') filtered = filtered.filter(e => e.dificultad === selectedDifficulty);
+      setExercises(filtered);
+      setLoading(false);
+      return;
+    }
+
     let query = supabase.from('exercises').select('*');
-
-    if (selectedArea !== 'All') {
-      query = query.eq('area', selectedArea);
-    }
-    if (selectedSubarea !== 'All') {
-      query = query.eq('subarea', selectedSubarea);
-    }
-    if (selectedDifficulty !== 'All') {
-      query = query.eq('dificultad', selectedDifficulty);
-    }
-
+    if (selectedArea !== 'All') query = query.eq('area', selectedArea);
+    if (selectedSubarea !== 'All') query = query.eq('subarea', selectedSubarea);
+    if (selectedDifficulty !== 'All') query = query.eq('dificultad', selectedDifficulty);
     const { data, error } = await query;
     if (error) console.error(error);
     else setExercises(data || []);
@@ -117,11 +124,18 @@ export const ExercisesPage: React.FC = () => {
     const isCorrect = optionIndex === activeExercise.respuesta_correcta;
 
     try {
-      await supabase.from('practice_stats').insert({
+      const payload = {
         user_id: user?.id,
         exercise_id: activeExercise.id,
         is_correct: isCorrect
-      });
+      };
+
+      if (isOffline) {
+        addToQueue({ type: 'practice', data: payload });
+        return;
+      }
+
+      await supabase.from('practice_stats').insert(payload);
 
       if (isCorrect) {
         const { data: profile } = await supabase

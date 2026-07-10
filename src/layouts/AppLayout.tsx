@@ -1,6 +1,8 @@
 import React from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useExam } from '@/context/ExamContext';
+import { useOffline } from '@/context/OfflineContext';
+import { WifiOff } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { LogOut, LayoutDashboard, BookOpen, GraduationCap, BarChart3, Menu, X, Sparkles, ShieldCheck, KeyRound, Check, AlertCircle, Loader2, ShieldAlert } from 'lucide-react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
@@ -10,6 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 export const AppLayout: React.FC = () => {
   const { user, isAdmin, studentName, signOut } = useAuth();
   const { examInProgress } = useExam();
+  const { isOffline } = useOffline();
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
   const [showPasswordModal, setShowPasswordModal] = React.useState(false);
   const [newPassword, setNewPassword] = React.useState('');
@@ -207,6 +210,14 @@ export const AppLayout: React.FC = () => {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Offline Banner */}
+      {isOffline && (
+        <div className="sticky top-0 z-[70] w-full bg-amber-500 text-white text-center py-2 px-4 text-sm font-bold flex items-center justify-center gap-2">
+          <WifiOff className="w-4 h-4" />
+          Estás offline — los datos se sincronizarán cuando recuperes conexión
+        </div>
+      )}
 
       {/* Main Content */}
       <main className="flex-1 max-h-screen overflow-y-auto">

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { useExam } from '@/context/ExamContext';
+import { useOffline } from '@/context/OfflineContext';
+import { addToQueue } from '@/lib/cache';
 import type { Exercise, Area, Dificultad } from '@/types';
 import { 
   Play, 
@@ -108,6 +110,7 @@ const BLOCKS: BlockConfig[] = [
 export const ExamsPage: React.FC = () => {
   const { user } = useAuth();
   const { setExamInProgress } = useExam();
+  const { isOffline, getCachedExercises } = useOffline();
   const [step, setStep] = useState<'setup' | 'block' | 'exam' | 'results'>('setup');
   const [loading, setLoading] = useState(false);
   const [exercises, setExercises] = useState<Exercise[]>([]);
@@ -169,11 +172,16 @@ export const ExamsPage: React.FC = () => {
     try {
       const areaList = Object.keys(selectedBlock.distribution);
 
-      const { data: allQuestions } = await supabase
-        .from('exercises')
-        .select('*');
+      let allQuestions;
 
-      if (!allQuestions) return;
+      if (isOffline) {
+        allQuestions = getCachedExercises();
+      } else {
+        const { data } = await supabase.from('exercises').select('*');
+        allQuestions = data || [];
+      }
+
+      if (!allQuestions.length) return;
 
       const usedIds = user ? getUsedIds(user.id) : new Set<string>();
 
@@ -236,8 +244,20 @@ export const ExamsPage: React.FC = () => {
     setResults(finalResults);
     setStep('results');
 
-    // Save to Supabase
+    // Save to Supabase (or queue for offline)
     if (user) {
+      const answers = exercises.map(ex => ({
+        exercise_id: ex.id,
+        user_answer: userAnswers[ex.id] ?? null,
+        is_correct: userAnswers[ex.id] === ex.respuesta_correcta
+      }));
+
+      if (isOffline) {
+        addToQueue({ type: 'exam', data: { user_id: user.id, score, total_questions: exercises.length, time_spent_seconds: time } });
+        addToQueue({ type: 'exam_answers', data: answers.map(a => ({ ...a, exam_id: '__pending__' })) });
+        return;
+      }
+
       try {
         const { data: examData, error: examError } = await supabase
           .from('exams')
@@ -256,16 +276,10 @@ export const ExamsPage: React.FC = () => {
         }
 
         if (examData) {
-          const answers = exercises.map(ex => ({
-            exam_id: examData.id,
-            exercise_id: ex.id,
-            user_answer: userAnswers[ex.id] ?? null,
-            is_correct: userAnswers[ex.id] === ex.respuesta_correcta
-          }));
-          const { error: answersError } = await supabase.from('exam_answers').insert(answers);
+          const examAnswers = answers.map(a => ({ ...a, exam_id: examData.id }));
+          const { error: answersError } = await supabase.from('exam_answers').insert(examAnswers);
           if (answersError) console.error('Error saving answers:', answersError);
 
-          // Reward points directly on profile
           const points = score * 10;
           const { data: profile } = await supabase
             .from('profiles')
